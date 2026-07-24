@@ -2,8 +2,6 @@
 import tensorflow as tf
 from .BaseDatasetLoader import BaseDatasetLoader
 
-AUTOTUNE = tf.data.AUTOTUNE
-
 class LocalDirectoryDatasetLoader(BaseDatasetLoader):
 
     def __init__ (self, cfg):
@@ -12,7 +10,7 @@ class LocalDirectoryDatasetLoader(BaseDatasetLoader):
         self._num_classes = None
 
     def __str__(self):
-        return f"LocalDirectoryDatasetLoader"
+        return self.__class__.__name__
 
     @property
     def num_classes(self):
@@ -49,29 +47,25 @@ class LocalDirectoryDatasetLoader(BaseDatasetLoader):
     
     def load(self):
  
-        train_dataset = self._create_dataset(
+        train_ds = self._create_dataset(
             directory=self._cfg.dataset.train_dir,
             subset='training',
             validation_split=self._cfg.dataset.validation_split
             )
                                              
         
-        validation_dataset = self._create_dataset(
+        val_ds = self._create_dataset(
             directory=self._cfg.dataset.train_dir,
             subset='validation',
             validation_split=self._cfg.dataset.validation_split
             )
         
-        test_dataset = self._create_dataset(
+        test_ds = self._create_dataset(
             directory=self._cfg.dataset.test_dir
             )
 
-        self._class_names = train_dataset.class_names
+        self._class_names = train_ds.class_names
         self._num_classes = len(self._class_names)
 
-        train_dataset = train_dataset.prefetch(AUTOTUNE)
-        validation_dataset = validation_dataset.prefetch(AUTOTUNE)
-        test_dataset = test_dataset.prefetch(AUTOTUNE)
-
-        return (train_dataset, validation_dataset, test_dataset)
+        return (train_ds, val_ds, test_ds)
         
