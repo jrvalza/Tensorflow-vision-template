@@ -1,0 +1,8 @@
+
+.vscode/
+data/
+outputs/
+omegaConf_test/
+
+__pycache__/
+*.py[cod]

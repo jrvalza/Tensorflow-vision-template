@@ -1,0 +1,5 @@
+
+model_name: "CNN from scratch"
+type: "CNN"
+task: "clasification"
+fine_tune: False
