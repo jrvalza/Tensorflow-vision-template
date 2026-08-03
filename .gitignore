@@ -1,6 +1,6 @@
 
 .vscode/
-data/
+raw_data/
 outputs/
 omegaConf_test/
 
