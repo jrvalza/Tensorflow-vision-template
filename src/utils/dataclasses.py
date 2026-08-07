@@ -9,8 +9,8 @@ class PreprocessingConfig:
     steps: list[str] = field(default_factory=list)
 
 @dataclass
-class CallbackConfig:
-    """Configuration for a training callback"""
+class ParamsConfig:
+    """Configuration for specific params"""
 
     name: str
     params: dict[str, Any] = field(default_factory=dict)
@@ -51,12 +51,12 @@ class ModelConfig:
 @dataclass
 class TrainingConfig:
     """Configuration for training model"""
-    optimizer: str
-    learning_rate: float
+    
     loss: str
     epochs: int
+    optimizer: ParamsConfig
     metrics: list[str] = field(default_factory=list)
-    callbacks: list[CallbackConfig] = field(default_factory=list)
+    callbacks: list[ParamsConfig] = field(default_factory=list)
 
 @dataclass
 class TestConfig:

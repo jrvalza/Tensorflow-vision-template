@@ -19,7 +19,7 @@ class Trainer:
         self.val_ds = val_ds
         self.history: History | None = None
 
-    def train(self) -> Model:
+    def train(self) -> None:
         """ Compile and train a Keras model"""
 
         optimizer = resolve_optimizer(self.cfg.trainer)
