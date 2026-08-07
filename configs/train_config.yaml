@@ -1,4 +1,5 @@
 defaults:
   - dataset: pnoa
   - model: cnn_scratch
+  - trainer: default
   
