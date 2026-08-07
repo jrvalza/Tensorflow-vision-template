@@ -1,58 +1,45 @@
 
 import hydra
 from omegaconf import DictConfig, OmegaConf
-from tensorflow.keras.optimizers import SGD
-from tensorflow.keras.utils import plot_model
 
-from src.utils.dataclasses import Config
+from src.training.Trainer import Trainer
 from src.model.ModelManager import ModelManager
 from src.data.DatasetManager import DatasetManager
+from src.evaluation.EvaluatorManager import EvaluatorManager
+
+from src.utils.dataclasses import TrainConfig
+from src.evaluation.plots import plot_training_curves
 
 
-@hydra.main(version_base=None, config_path="configs", config_name="config")
+@hydra.main(version_base=None, config_path="configs", config_name="train_config")
 def main(cfg: DictConfig):
 
-    schema = OmegaConf.structured(Config)
+    schema = OmegaConf.structured(TrainConfig)
     cfg = OmegaConf.merge(schema, cfg)
     print(OmegaConf.to_yaml(cfg))
 
     #LOAD DATA
+    print("[INFO]: Cargando datos...")
     data_manager = DatasetManager(cfg)
-
     train_ds, val_ds, test_ds = data_manager.load_data()
-    labelNames = data_manager.class_names
 
     #TRAIN
-    # Compilar el modelo
     print("[INFO]: Compilando el modelo...")
-
-    input_shape = (32, 32, 4)
-    
     model_manager = ModelManager(cfg)
+    input_shape = (*cfg.dataset.image_size, cfg.dataset.num_bands)
     model = model_manager.build(input_shape=input_shape,num_classes=data_manager.num_classes)
 
-    my_opt = SGD(learning_rate=0.01)
-    model.compile(optimizer=my_opt, loss="categorical_crossentropy", metrics=["accuracy"])
+    print("[INFO]: Entrenando el modelo...")
+    trainer = Trainer(cfg, model, train_ds, val_ds)
+    trainer.train()
+    plot_training_curves(trainer.history)
 
-    model.summary()
-    print()
-    print(f"Model parameters: {model.count_params():,}")
-    plot_model(
-        model,
-        to_file="model.png",
-        show_shapes=True,
-        show_dtype=True,
-        show_layer_names=True,
-        expand_nested=True,
-    )
+    print("[INFO]: Evaluando el modelo...")
+    evaluator_manager = EvaluatorManager(cfg)
+    evaluator = evaluator_manager.build_evaluator()
+    evaluator.evaluate(trainer.model, test_ds, class_names=data_manager.class_names)
 
-    """
-    # Entrenamiento de la red con 5 épocas. Ver documentación del método Model.fit.
-    print("[INFO]: Entrenando la red...")
-    H = model.fit(train_ds,
-                validation_data=val_ds,
-                epochs=2)
-    """
-
+    print("[INFO]: Fin.")
+    
 if __name__ == "__main__":
-    main()
+    main()  
