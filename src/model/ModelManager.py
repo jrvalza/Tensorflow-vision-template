@@ -6,7 +6,7 @@ from .builders.deep_cnn import deep_cnn
 
 
 class ModelManager:
-    """Manage model creation from the project configuration."""
+    """Manager class for model creation from the project configuration."""
 
     MODEL_REGISTRY = {
         "deep_cnn": deep_cnn
@@ -31,16 +31,11 @@ class ModelManager:
 
         Returns:
             A Keras model.
-
-        Raises:
-            ValueError: If the requested architecture is not registered.
         """
 
         try:
             build_fn = self.MODEL_REGISTRY[self._cfg.model.architecture]
-        except KeyError:
-            raise ValueError(
-                f"Unknown model architecture: {self._cfg.model.architecture}"
-            )
+        except KeyError as e:
+            raise ValueError(f"Unknown model architecture: {self._cfg.model.architecture}") from e
         return build_fn(self._cfg, input_shape, num_classes) 
     

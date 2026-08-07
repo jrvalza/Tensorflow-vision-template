@@ -6,7 +6,7 @@ from omegaconf import DictConfig
 
 
 class BaseDatasetLoader(ABC):
-    """Abstract base class for dataset loaders."""
+    """Base interface for dataset loaders"""
 
     def __init__(self, cfg: DictConfig) -> None:
         self._cfg = cfg

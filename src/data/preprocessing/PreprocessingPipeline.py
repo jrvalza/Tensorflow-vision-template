@@ -13,16 +13,12 @@ class PreprocessingPipeline:
             }
 
     def _resolve_step(self, step_name: str):
-        """
-        Resolve a preprocessing step name to its corresponding function.
+        """Resolve a preprocessing step name to its corresponding function"""
 
-        Raises:
-            ValueError: If the preprocessing step is not registered.
-        """
         try:
             return self._steps_registry[step_name]
-        except KeyError:
-            raise ValueError(f"Unknown preprocessing step: {step_name}")
+        except KeyError as e:
+            raise ValueError(f"Unknown preprocessing step: {step_name}") from e
         
     def _normalization_fn(self, image: tf.Tensor, label: tf.Tensor) -> tuple[tf.Tensor, tf.Tensor]:
         """Normalize image pixel values by scaling them from [0, 255] to [0, 1]."""

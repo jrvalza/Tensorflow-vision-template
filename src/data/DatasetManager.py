@@ -12,7 +12,7 @@ AUTOTUNE = tf.data.AUTOTUNE
 
 
 class DatasetManager:
-    """Manage dataset loading, preprocessing and access to dataset metadata."""
+    """Manager class for dataset loading, preprocessing and access to dataset metadata."""
 
     LOADER_REGISTRY: dict[str, type[BaseDatasetLoader]] = {
         "from_local_directory": LocalDirectoryDatasetLoader
@@ -47,13 +47,10 @@ class DatasetManager:
             
         try:
             loader_cls = self.LOADER_REGISTRY[self._cfg.dataset.loader]    
-        except KeyError:
-            raise ValueError(
-                f"Unknown dataset loader: {self._cfg.dataset.loader}"
-            )
+        except KeyError as e:
+            raise ValueError(f"Unknown dataset loader: {self._cfg.dataset.loader}") from e
         
         self._loader = loader_cls(self._cfg)
-        print(f"Usando loader: {self._loader}")
         
         train_ds, val_ds, test_ds = self._loader.load_data()
 

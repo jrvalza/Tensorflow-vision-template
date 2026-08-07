@@ -1,7 +1,11 @@
 
+import json
+
 import tensorflow as tf
 from omegaconf import DictConfig
 from .BaseDatasetLoader import BaseDatasetLoader
+
+from src.utils.paths import get_checkpoint_dir
 
 
 class LocalDirectoryDatasetLoader(BaseDatasetLoader):
@@ -91,6 +95,12 @@ class LocalDirectoryDatasetLoader(BaseDatasetLoader):
 
         self._class_names = train_ds.class_names
         self._num_classes = len(self._class_names)
+     
+        checkpoint_dir = get_checkpoint_dir()
+        class_names_path = str(checkpoint_dir / "class_names.json")
+
+        with open(class_names_path, "w") as f:
+            json.dump(self.class_names, f, indent=2)
 
         return train_ds, val_ds, test_ds
         
