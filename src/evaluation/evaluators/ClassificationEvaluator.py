@@ -7,6 +7,7 @@ from tensorflow.keras.models import Model
 from src.evaluation.metrics import (
     classification_report_dict,
     classification_report_text,
+    compute_accuracy,
     compute_balanced_accuracy,
     compute_cohen_kappa,
     compute_confusion_matrix
@@ -41,13 +42,16 @@ class ClassificationEvaluator(BaseEvaluator):
         y_true, y_pred = self._predict_labels(model, test_ds)
  
         report = classification_report_dict(y_true, y_pred, class_names)
+        oa = compute_accuracy(y_true, y_pred) 
         b_acc = compute_balanced_accuracy(y_true, y_pred)
         kappa = compute_cohen_kappa(y_true, y_pred)
         print(classification_report_text(y_true, y_pred, class_names))
+        print(f"Overall Accuracy : {oa}")
         print(f"Balanced Accuracy : {b_acc}")
         print(f"Cohen's Kappa    : {kappa}")
 
-        self._save_report({"balanced_accuracy": b_acc,
+        self._save_report({"overall_accuracy": oa,
+                           "balanced_accuracy": b_acc,
                            "cohen_kappa": kappa,
                            "classification_report": report
                            }
