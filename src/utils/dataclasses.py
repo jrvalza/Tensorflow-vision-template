@@ -1,15 +1,23 @@
 
+from typing import Any
 from dataclasses import dataclass, field
 
 @dataclass
 class PreprocessingConfig:
-    """Configuration for the preprocessing pipeline."""
+    """Configuration for the preprocessing pipeline"""
 
     steps: list[str] = field(default_factory=list)
 
 @dataclass
+class CallbackConfig:
+    """Configuration for a training callback"""
+
+    name: str
+    params: dict[str, Any] = field(default_factory=dict)
+
+@dataclass
 class DatasetConfig:
-    """Configuration for dataset loading and preprocessing."""
+    """Configuration for dataset loading and preprocessing"""
 
     dataset_name: str
     loader: str
@@ -31,7 +39,7 @@ class DatasetConfig:
 
 @dataclass
 class ModelConfig:
-    """Configuration for model creation and training."""
+    """Configuration for model creation and training"""
 
     model_name: str
     architecture: str
@@ -39,10 +47,27 @@ class ModelConfig:
     fine_tune: bool
     batch_norm: bool
     dropout_rate: float
+    
+@dataclass
+class TrainingConfig:
+    """Configuration for training model"""
+    optimizer: str
+    learning_rate: float
+    loss: str
+    epochs: int
+    metrics: list[str] = field(default_factory=list)
+    callbacks: list[CallbackConfig] = field(default_factory=list)
 
 @dataclass
-class Config:
-    """Root configuration object for the project."""
+class TestConfig:
+    """Configuration for model evaluation"""
+    dataset: DatasetConfig
+    model_path: str
+
+@dataclass
+class TrainConfig:
+    """Configuration for model training"""
 
     dataset: DatasetConfig
     model: ModelConfig
+    trainer: TrainingConfig
