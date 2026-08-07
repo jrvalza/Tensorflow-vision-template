@@ -1,11 +1,17 @@
 
 from omegaconf import DictConfig
-from tensorflow.keras.optimizers import SGD, Adam, Optimizer
+from tensorflow.keras.optimizers import (
+    SGD, 
+    Adam,
+    AdamW, 
+    Optimizer
+)
 
 
 OPTIMIZER_REGISTRY: dict[str, type[Optimizer]] = {
     "sgd": SGD,
-    "adam": Adam
+    "adam": Adam,
+    "adamw": AdamW
 }
 
 def resolve_optimizer(cfg_trainer: DictConfig) -> Optimizer:
