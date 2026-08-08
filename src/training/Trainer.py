@@ -6,6 +6,7 @@ from tensorflow.keras.callbacks import History
 
 from src.training.callbacks import resolve_callbacks
 from src.training.optimizers import resolve_optimizer
+from src.training.losses import resolve_loss
 
 
 class Trainer:
@@ -28,10 +29,11 @@ class Trainer:
         """Compile and train a Keras model"""
         optimizer = resolve_optimizer(self.cfg.trainer)
         callbacks = resolve_callbacks(self.cfg.trainer)
+        loss = resolve_loss(self.cfg.trainer)
 
         self.model.compile(
             optimizer=optimizer,
-            loss=self.cfg.trainer.loss,
+            loss=loss,
             metrics=list(self.cfg.trainer.metrics),
         )
 

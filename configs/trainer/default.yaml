@@ -1,12 +1,18 @@
 
+epochs: 10
+metrics: ["accuracy"]
+
+loss:
+  name: categorical-crossentropy
+  params:
+    from_logits: false
+    label_smoothing: 0.0
+
 optimizer:
   name: adam
   params:
     learning_rate: 0.01
 
-loss: "categorical_crossentropy"
-metrics: ["accuracy"]
-epochs: 10
 callbacks:
   - name: early_stopping
     params:

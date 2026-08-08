@@ -56,8 +56,8 @@ class ModelConfig:
 class TrainergConfig:
     """Configuration for training model"""
 
-    loss: str
     epochs: int
+    loss: ParamsConfig
     optimizer: ParamsConfig
     metrics: list[str] = field(default_factory=list)
     callbacks: list[ParamsConfig] = field(default_factory=list)
