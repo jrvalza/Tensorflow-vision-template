@@ -1,4 +1,3 @@
-
 from omegaconf import DictConfig
 from tensorflow.keras.models import Model
 from tensorflow.keras.layers import (
@@ -12,7 +11,9 @@ from tensorflow.keras.layers import (
 )
 
 
-def deep_cnn(cfg: DictConfig, input_shape: tuple[int, int, int], num_classes: int) -> Model:
+def deep_cnn(
+    cfg: DictConfig, input_shape: tuple[int, int, int], num_classes: int
+) -> Model:
     """
     Build a Deep CNN classification model.
 
@@ -24,7 +25,6 @@ def deep_cnn(cfg: DictConfig, input_shape: tuple[int, int, int], num_classes: in
     Returns:
         The constructed Keras model.
     """
-
     batch_norm = cfg.model.batch_norm
     dropout_rate = cfg.model.dropout_rate
 

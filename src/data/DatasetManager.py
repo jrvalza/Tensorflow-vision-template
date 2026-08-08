@@ -1,4 +1,3 @@
-
 import json
 import tensorflow as tf
 from omegaconf import DictConfig
@@ -6,7 +5,6 @@ from omegaconf import DictConfig
 from .loaders.BaseDatasetLoader import BaseDatasetLoader
 from .loaders.LocalDirectoryDatasetLoader import LocalDirectoryDatasetLoader
 from .preprocessing.PreprocessingPipeline import PreprocessingPipeline
-
 
 AUTOTUNE = tf.data.AUTOTUNE
 
@@ -25,7 +23,10 @@ class DatasetManager:
 
     def __str__(self) -> str:
         """Return the available dataset loaders."""
-        loaders = {loader_type: loader_cls.__name__ for loader_type, loader_cls in self.LOADER_REGISTRY.items()}
+        loaders = {
+            loader_type: loader_cls.__name__
+            for loader_type, loader_cls in self.LOADER_REGISTRY.items()
+        }
         return f"Available dataset loaders:\n{json.dumps(loaders, indent=4)}"
 
     @property
@@ -44,14 +45,15 @@ class DatasetManager:
 
     def load_data(self) -> tuple[tf.data.Dataset, tf.data.Dataset, tf.data.Dataset]:
         """Load, preprocess and optimize the datasets."""
-            
         try:
-            loader_cls = self.LOADER_REGISTRY[self._cfg.dataset.loader]    
+            loader_cls = self.LOADER_REGISTRY[self._cfg.dataset.loader]
         except KeyError as e:
-            raise ValueError(f"Unknown dataset loader: {self._cfg.dataset.loader}") from e
-        
+            raise ValueError(
+                f"Unknown dataset loader: {self._cfg.dataset.loader}"
+            ) from e
+
         self._loader = loader_cls(self._cfg)
-        
+
         train_ds, val_ds, test_ds = self._loader.load_data()
 
         train_ds = self._preprocess_pipeline.apply(train_ds)
@@ -63,4 +65,3 @@ class DatasetManager:
         test_ds = test_ds.prefetch(AUTOTUNE)
 
         return train_ds, val_ds, test_ds
-    

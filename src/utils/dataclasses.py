@@ -1,6 +1,6 @@
-
 from typing import Any
 from dataclasses import dataclass, field
+
 
 @dataclass
 class PreprocessingConfig:
@@ -8,12 +8,14 @@ class PreprocessingConfig:
 
     steps: list[str] = field(default_factory=list)
 
+
 @dataclass
 class ParamsConfig:
     """Configuration for specific params"""
 
     name: str
     params: dict[str, Any] = field(default_factory=dict)
+
 
 @dataclass
 class DatasetConfig:
@@ -31,11 +33,12 @@ class DatasetConfig:
     image_size: tuple[int, int]
     batch_size: int
     label_mode: str
-    
+
     shuffle: bool
     seed: int
 
     preprocessing: PreprocessingConfig
+
 
 @dataclass
 class ModelConfig:
@@ -47,22 +50,26 @@ class ModelConfig:
     fine_tune: bool
     batch_norm: bool
     dropout_rate: float
-    
+
+
 @dataclass
-class TrainingConfig:
+class TrainergConfig:
     """Configuration for training model"""
-    
+
     loss: str
     epochs: int
     optimizer: ParamsConfig
     metrics: list[str] = field(default_factory=list)
     callbacks: list[ParamsConfig] = field(default_factory=list)
 
+
 @dataclass
 class TestConfig:
     """Configuration for model evaluation"""
+
     dataset: DatasetConfig
     model_path: str
+
 
 @dataclass
 class TrainConfig:
@@ -70,4 +77,4 @@ class TrainConfig:
 
     dataset: DatasetConfig
     model: ModelConfig
-    trainer: TrainingConfig
+    trainer: TrainergConfig

@@ -1,4 +1,3 @@
-
 import hydra
 from omegaconf import DictConfig, OmegaConf
 
@@ -18,16 +17,18 @@ def main(cfg: DictConfig):
     cfg = OmegaConf.merge(schema, cfg)
     print(OmegaConf.to_yaml(cfg))
 
-    #LOAD DATA
+    # LOAD DATA
     print("[INFO]: Cargando datos...")
     data_manager = DatasetManager(cfg)
     train_ds, val_ds, test_ds = data_manager.load_data()
 
-    #TRAIN
+    # TRAIN
     print("[INFO]: Compilando el modelo...")
     model_manager = ModelManager(cfg)
     input_shape = (*cfg.dataset.image_size, cfg.dataset.num_bands)
-    model = model_manager.build(input_shape=input_shape,num_classes=data_manager.num_classes)
+    model = model_manager.build(
+        input_shape=input_shape, num_classes=data_manager.num_classes
+    )
 
     print("[INFO]: Entrenando el modelo...")
     trainer = Trainer(cfg, model, train_ds, val_ds)
@@ -40,6 +41,7 @@ def main(cfg: DictConfig):
     evaluator.evaluate(trainer.model, test_ds, class_names=data_manager.class_names)
 
     print("[INFO]: Fin.")
-    
+
+
 if __name__ == "__main__":
-    main()  
+    main()
