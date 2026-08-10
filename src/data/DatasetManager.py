@@ -46,10 +46,10 @@ class DatasetManager:
     def load_data(self) -> tuple[tf.data.Dataset, tf.data.Dataset, tf.data.Dataset]:
         """Load, preprocess and optimize the datasets."""
         try:
-            loader_cls = self.LOADER_REGISTRY[self._cfg.dataset.loader]
+            loader_cls = self.LOADER_REGISTRY[self._cfg.dataset.loader.name]
         except KeyError as e:
             raise ValueError(
-                f"Unknown dataset loader: {self._cfg.dataset.loader}"
+                f"Unknown dataset loader: {self._cfg.dataset.loader.name}"
             ) from e
 
         self._loader = loader_cls(self._cfg)

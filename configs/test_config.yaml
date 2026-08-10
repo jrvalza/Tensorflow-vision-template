@@ -1,5 +1,5 @@
 
 defaults:
-  - dataset: pnoa
+  - dataset: image_directory
 
 model_path: "outputs/2026-08-04/15-08-52/checkpoints/best_model.keras"

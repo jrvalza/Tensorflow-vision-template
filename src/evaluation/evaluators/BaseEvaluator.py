@@ -12,11 +12,9 @@ class BaseEvaluator(ABC):
     """Base interface for task-specific model evaluation"""
 
     def __init__(self, cfg: DictConfig) -> None:
-        self.cfg = cfg
+        self._cfg = cfg
 
-    def _save_report(
-        self, report: dict, filename: str = "classification_report.json"
-    ) -> None:
+    def _save_report(self, report: dict, filename: str) -> None:
         """Persist the classification report as JSON"""
         report_path = get_evaluation_dir() / filename
         with open(report_path, "w") as f:

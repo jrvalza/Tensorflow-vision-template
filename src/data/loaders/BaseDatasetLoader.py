@@ -12,13 +12,13 @@ class BaseDatasetLoader(ABC):
 
     @property
     @abstractmethod
-    def num_classes(self) -> int:
+    def num_classes(self) -> int | None:
         """Return the number of classes in the dataset."""
         pass
 
     @property
     @abstractmethod
-    def class_names(self) -> list[str]:
+    def class_names(self) -> list[str] | None:
         """Return the dataset class names."""
         pass
 

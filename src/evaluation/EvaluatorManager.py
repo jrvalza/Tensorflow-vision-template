@@ -13,7 +13,7 @@ class EvaluatorManager:
     }
 
     def __init__(self, cfg: DictConfig) -> None:
-        self.cfg = cfg
+        self._cfg = cfg
 
     def __str__(self) -> str:
         """Return the available evaluators"""
@@ -26,7 +26,7 @@ class EvaluatorManager:
     def build_evaluator(self) -> BaseEvaluator:
         """Build the task-specific evaluator configured in cfg.model.task"""
         try:
-            evaluator_cls = self.TASK_EVALUATOR_REGISTRY[self.cfg.model.task]
+            evaluator_cls = self.TASK_EVALUATOR_REGISTRY[self._cfg.model.task]
         except KeyError as e:
-            raise ValueError(f"Unknown task: {self.cfg.model.task}") from e
-        return evaluator_cls(self.cfg)
+            raise ValueError(f"Unknown task: {self._cfg.model.task}") from e
+        return evaluator_cls(self._cfg)

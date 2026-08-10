@@ -25,7 +25,8 @@ def main(cfg: DictConfig):
     # TRAIN
     print("[INFO]: Compilando el modelo...")
     model_manager = ModelManager(cfg)
-    input_shape = (*cfg.dataset.image_size, cfg.dataset.num_bands)
+    image_size = tuple(cfg.dataset.loader.params.image_size)
+    input_shape = (*image_size, cfg.dataset.num_bands)
     model = model_manager.build(
         input_shape=input_shape, num_classes=data_manager.num_classes
     )
@@ -33,12 +34,12 @@ def main(cfg: DictConfig):
     print("[INFO]: Entrenando el modelo...")
     trainer = Trainer(cfg, model, train_ds, val_ds)
     trainer.train()
-    plot_training_curves(trainer.history)
+    plot_training_curves(trainer._history)
 
     print("[INFO]: Evaluando el modelo...")
     evaluator_manager = EvaluatorManager(cfg)
     evaluator = evaluator_manager.build_evaluator()
-    evaluator.evaluate(trainer.model, test_ds, class_names=data_manager.class_names)
+    evaluator.evaluate(trainer._model, test_ds, class_names=data_manager.class_names)
 
     print("[INFO]: Fin.")
 

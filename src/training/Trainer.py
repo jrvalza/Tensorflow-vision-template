@@ -19,27 +19,27 @@ class Trainer:
         train_ds: tf.data.Dataset,
         val_ds: tf.data.Dataset,
     ) -> None:
-        self.cfg = cfg
-        self.model = model
-        self.train_ds = train_ds
-        self.val_ds = val_ds
-        self.history: History | None = None
+        self._cfg = cfg
+        self._model = model
+        self._train_ds = train_ds
+        self._val_ds = val_ds
+        self._history: History | None = None
 
     def train(self) -> None:
         """Compile and train a Keras model"""
-        optimizer = resolve_optimizer(self.cfg.trainer)
-        callbacks = resolve_callbacks(self.cfg.trainer)
-        loss = resolve_loss(self.cfg.trainer)
+        optimizer = resolve_optimizer(self._cfg.training)
+        callbacks = resolve_callbacks(self._cfg.training)
+        loss = resolve_loss(self._cfg.training)
 
-        self.model.compile(
+        self._model.compile(
             optimizer=optimizer,
             loss=loss,
-            metrics=list(self.cfg.trainer.metrics),
+            metrics=list(self._cfg.training.metrics),
         )
 
-        self.history = self.model.fit(
-            self.train_ds,
-            validation_data=self.val_ds,
-            epochs=self.cfg.trainer.epochs,
+        self._history = self._model.fit(
+            self._train_ds,
+            validation_data=self._val_ds,
+            epochs=self._cfg.training.epochs,
             callbacks=callbacks,
         )

@@ -1,7 +1,7 @@
 import json
 
 import tensorflow as tf
-from omegaconf import DictConfig
+from omegaconf import DictConfig, OmegaConf
 from .BaseDatasetLoader import BaseDatasetLoader
 
 from src.utils.paths import get_checkpoint_dir
@@ -32,10 +32,7 @@ class LocalDirectoryDatasetLoader(BaseDatasetLoader):
         return self._class_names
 
     def _create_dataset(
-        self,
-        directory: str,
-        subset: str | None = None,
-        validation_split: float | None = None,
+        self, directory: str, subset: str | None = None
     ) -> tf.data.Dataset:
         """
         Create a TensorFlow dataset from a directory.
@@ -43,7 +40,6 @@ class LocalDirectoryDatasetLoader(BaseDatasetLoader):
         Args:
             directory: Path to the image directory.
             subset: Dataset subset ("training" or "validation").
-            validation_split: Fraction of data reserved for validation.
 
         Returns:
             A TensorFlow dataset.
@@ -53,18 +49,20 @@ class LocalDirectoryDatasetLoader(BaseDatasetLoader):
         if color_mode is None:
             raise ValueError(f"Unsupported num_bands: {self._cfg.dataset.num_bands}")
 
-        return tf.keras.utils.image_dataset_from_directory(
-            directory,
-            labels="inferred",
-            color_mode=color_mode,
-            label_mode=self._cfg.dataset.label_mode,
-            image_size=tuple(self._cfg.dataset.image_size),
-            batch_size=self._cfg.dataset.batch_size,
-            validation_split=validation_split,
-            subset=subset,
-            shuffle=self._cfg.dataset.shuffle,
-            seed=self._cfg.dataset.seed,
+        params = dict(
+            OmegaConf.to_container(self._cfg.dataset.loader.params, resolve=True)
         )
+
+        params["directory"] = directory
+        params["labels"] = "inferred"
+        params["color_mode"] = color_mode
+
+        if subset is not None:
+            params["subset"] = subset
+        else:
+            params.pop("validation_split", None)
+
+        return tf.keras.utils.image_dataset_from_directory(**params)
 
     def load_data(self) -> tuple[tf.data.Dataset, tf.data.Dataset, tf.data.Dataset]:
         """
@@ -74,15 +72,11 @@ class LocalDirectoryDatasetLoader(BaseDatasetLoader):
             A tuple containing the training, validation and test datasets.
         """
         train_ds = self._create_dataset(
-            directory=self._cfg.dataset.train_dir,
-            subset="training",
-            validation_split=self._cfg.dataset.validation_split,
+            directory=self._cfg.dataset.train_dir, subset="training"
         )
 
         val_ds = self._create_dataset(
-            directory=self._cfg.dataset.train_dir,
-            subset="validation",
-            validation_split=self._cfg.dataset.validation_split,
+            directory=self._cfg.dataset.train_dir, subset="validation"
         )
 
         test_ds = self._create_dataset(directory=self._cfg.dataset.test_dir)

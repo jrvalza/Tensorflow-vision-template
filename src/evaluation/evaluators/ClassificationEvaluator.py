@@ -29,7 +29,7 @@ class ClassificationEvaluator(BaseEvaluator):
 
             y_pred.append(np.argmax(model.predict(images, verbose=0), axis=-1))
 
-            if self.cfg.dataset.label_mode == "categorical":
+            if self._cfg.dataset.loader.params.label_mode == "categorical":
                 y_true.append(np.argmax(labels.numpy(), axis=-1))
             else:
                 y_true.append(labels.numpy().squeeze())
@@ -57,7 +57,8 @@ class ClassificationEvaluator(BaseEvaluator):
                 "balanced_accuracy": b_acc,
                 "cohen_kappa": kappa,
                 "classification_report": report,
-            }
+            },
+            filename="classification_report.json",
         )
 
         cm = compute_confusion_matrix(y_true, y_pred)

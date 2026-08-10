@@ -2,7 +2,5 @@
 model_name: "CNN_from_scratch"
 architecture: "deep_cnn"
 task: "classification"
-fine_tune: False
 batch_norm: True
 dropout_rate: 0.5
-

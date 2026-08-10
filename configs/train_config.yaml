@@ -1,6 +1,6 @@
 
 defaults:
-  - dataset: pnoa
-  - model: cnn_scratch
-  - trainer: default
+  - dataset: image_directory
+  - model: classification
+  - training: default
   

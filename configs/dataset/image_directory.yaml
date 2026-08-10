@@ -1,0 +1,19 @@
+
+dataset_name: "PNOA-ortoimagenes"
+num_bands: 4
+train_dir: "raw_data/Train"
+test_dir: "raw_data/Test"
+
+loader: 
+  name: "from_local_directory"
+  params:
+    batch_size: 32
+    image_size: [32, 32]
+    validation_split: 0.2
+    label_mode: "categorical"
+    seed: 1
+    shuffle: True
+    
+preprocessing:
+    steps:
+        - "pixel-value-normalization"

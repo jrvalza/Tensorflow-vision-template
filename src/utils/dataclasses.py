@@ -22,20 +22,11 @@ class DatasetConfig:
     """Configuration for dataset loading and preprocessing"""
 
     dataset_name: str
-    loader: str
-
+    num_bands: int
     train_dir: str
     test_dir: str
 
-    validation_split: float
-
-    num_bands: int
-    image_size: tuple[int, int]
-    batch_size: int
-    label_mode: str
-
-    shuffle: bool
-    seed: int
+    loader: ParamsConfig
 
     preprocessing: PreprocessingConfig
 
@@ -47,13 +38,12 @@ class ModelConfig:
     model_name: str
     architecture: str
     task: str
-    fine_tune: bool
     batch_norm: bool
     dropout_rate: float
 
 
 @dataclass
-class TrainergConfig:
+class TrainingConfig:
     """Configuration for training model"""
 
     epochs: int
@@ -77,4 +67,4 @@ class TrainConfig:
 
     dataset: DatasetConfig
     model: ModelConfig
-    trainer: TrainergConfig
+    training: TrainingConfig
