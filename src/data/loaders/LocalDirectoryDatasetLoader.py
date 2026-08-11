@@ -10,7 +10,11 @@ from src.utils.paths import get_checkpoint_dir
 class LocalDirectoryDatasetLoader(BaseDatasetLoader):
     """Load image datasets from a local directory."""
 
-    COLOR_MODES: dict[int, str] = {1: "grayscale", 3: "rgb", 4: "rgba"}
+    COLOR_MODES: dict[int, str] = {
+        1: "grayscale",
+        3: "rgb",
+        4: "rgba",
+    }
 
     def __init__(self, cfg: DictConfig) -> None:
         super().__init__(cfg)

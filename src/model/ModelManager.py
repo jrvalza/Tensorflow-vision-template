@@ -1,13 +1,17 @@
 import json
+from typing import Callable
 from omegaconf import DictConfig
 from tensorflow.keras.models import Model
-from .builders.deep_cnn import deep_cnn
+from .builders import deep_cnn, declarative_model
 
 
 class ModelManager:
     """Manager class for model creation from the project configuration."""
 
-    MODEL_REGISTRY = {"deep_cnn": deep_cnn}
+    MODEL_REGISTRY: dict[str, Callable] = {
+        "deep_cnn": deep_cnn,
+        "declarative_model": declarative_model,
+    }
 
     def __init__(self, cfg: DictConfig) -> None:
         self._cfg = cfg
