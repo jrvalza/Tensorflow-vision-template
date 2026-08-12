@@ -4,8 +4,9 @@ from tensorflow.keras.applications import VGG16
 from tensorflow.keras.layers import (
     Dense,
     Conv2D,
-    Resizing,
     Dropout,
+    Flatten,
+    Resizing,
     MaxPooling2D,
     AveragePooling2D,
     BatchNormalization,
@@ -21,20 +22,20 @@ POOLING_REGISTRY: dict[str, Callable[..., Layer]] = {
 def conv2d_block(
     x: tf.Tensor,
     filters: int,
-    batch_norm: bool = False,
-    dropout_rate: float = 0.0,
-    pooling: str | None = None,
     activation: str = "relu",
+    batch_norm: bool = False,
+    pooling: str | None = None,
+    dropout_rate: float = 0.0,
 ) -> tf.Tensor:
     """Apply a 2D convolution with optional normalization, pooling, and dropout.
 
     Args:
         x: Input tensor.
         filters: Number of convolutional filters.
-        batch_norm: Whether to apply batch normalization.
-        dropout_rate: Dropout rate. A value of 0 disables dropout.
-        pooling: Optional pooling layer.
         activation: Activation function used by the convolution.
+        batch_norm: Whether to apply batch normalization.
+        pooling: Optional pooling layer.
+        dropout_rate: Dropout rate. A value of 0 disables dropout.
 
     Returns:
         Output tensor after applying the convolutional block.
@@ -61,8 +62,8 @@ def conv2d_block(
 
 def dense_head(
     x: tf.Tensor,
-    units: list[int],
     num_classes: int,
+    units: list[int],
     output_activation: str,
     batch_norm: bool = False,
     dropout_rate: float = 0.0,
@@ -71,8 +72,8 @@ def dense_head(
 
     Args:
         x: Input tensor.
-        units: Number of units for each intermediate dense layer.
         num_classes: Number of output classes.
+        units: Number of units for each intermediate dense layer.
         output_activation: Activation function of the final classifier.
         batch_norm: Whether to apply batch normalization after each dense layer.
         dropout_rate: Dropout rate applied after each dense layer.
@@ -80,7 +81,7 @@ def dense_head(
     Returns:
         Output tensor containing the class predictions.
     """
-
+    x = Flatten()(x)
     for num_units in units:
         x = Dense(num_units, activation="relu")(x)
 

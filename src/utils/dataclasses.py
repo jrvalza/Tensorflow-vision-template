@@ -3,18 +3,26 @@ from dataclasses import dataclass, field
 
 
 @dataclass
+class ParamsConfig:
+    """Configuration for specific params in loaders, losses, optimizers and callbacks"""
+
+    name: str
+    params: dict[str, Any] = field(default_factory=dict)
+
+
+@dataclass
+class BlockConfig:
+    """Configuration for specific params in keras layers"""
+
+    type: str
+    params: dict[str, Any] = field(default_factory=dict)
+
+
+@dataclass
 class PreprocessingConfig:
     """Configuration for the preprocessing pipeline"""
 
     steps: list[str] = field(default_factory=list)
-
-
-@dataclass
-class ParamsConfig:
-    """Configuration for specific params"""
-
-    name: str
-    params: dict[str, Any] = field(default_factory=dict)
 
 
 @dataclass
@@ -36,10 +44,9 @@ class ModelConfig:
     """Configuration for model creation and training"""
 
     model_name: str
-    architecture: str
+    builder: str
     task: str
-    batch_norm: bool
-    dropout_rate: float
+    blocks: list[BlockConfig] = field(default_factory=list)
 
 
 @dataclass

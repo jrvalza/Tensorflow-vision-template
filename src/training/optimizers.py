@@ -10,6 +10,7 @@ OPTIMIZER_REGISTRY: dict[str, type[Optimizer]] = {
 
 def resolve_optimizer(cfg_training: DictConfig) -> Optimizer:
     """Resolve and instantiate the configured optimizer"""
+
     try:
         optimizer_cls = OPTIMIZER_REGISTRY[cfg_training.optimizer.name]
     except KeyError as e:

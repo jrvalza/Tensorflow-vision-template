@@ -25,8 +25,13 @@ class Trainer:
         self._val_ds = val_ds
         self._history: History | None = None
 
-    def train(self) -> None:
-        """Compile and train a Keras model"""
+    @property
+    def history(self) -> History | None:
+        """Training history from the last call to train()."""
+        return self._history
+
+    def train(self) -> Model:
+        """Compile and train the model, returning the trained instance"""
         optimizer = resolve_optimizer(self._cfg.training)
         callbacks = resolve_callbacks(self._cfg.training)
         loss = resolve_loss(self._cfg.training)
@@ -43,3 +48,4 @@ class Trainer:
             epochs=self._cfg.training.epochs,
             callbacks=callbacks,
         )
+        return self._model

@@ -1,6 +1,22 @@
 
 model_name: "CNN_from_scratch"
-architecture: "deep_cnn"
+builder: "declarative_classification_model"
 task: "classification"
-batch_norm: True
-dropout_rate: 0.5
+
+blocks:
+
+  - type: conv2d_block
+    params: {filters: 32, activation: relu, batch_norm: true}
+
+  - type: conv2d_block
+    params: {filters: 32, activation: relu, batch_norm: true, pooling: max2d, dropout_rate: 0.25}
+
+  - type: conv2d_block
+    params: {filters: 64, activation: relu, batch_norm: true}
+
+  - type: conv2d_block
+    params: {filters: 64, activation: relu, batch_norm: true, pooling: max2d, dropout_rate: 0.25}
+
+  - type: dense_head
+    params: {units: [512], output_activation: softmax, batch_norm: true, dropout_rate: 0.5}
+

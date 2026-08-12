@@ -49,9 +49,11 @@ def deep_cnn(
     block2 = Dropout(dropout_rate / 2)(block2)
 
     classifier = Flatten()(block2)
+
     classifier = Dense(units=512, activation="relu")(classifier)
     if batch_norm:
         classifier = BatchNormalization()(classifier)
+
     classifier = Dropout(dropout_rate)(classifier)
 
     predictions = Dense(units=num_classes, activation="softmax")(classifier)

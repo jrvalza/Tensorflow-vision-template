@@ -6,10 +6,10 @@ from tensorflow.keras.models import Model
 from src.model.blocks import BLOCKS_REGISTRY
 
 
-def declarative_model(
+def declarative_classification_model(
     cfg: DictConfig, input_shape: tuple[int, int, int], num_classes: int
 ) -> Model:
-    """Create a model by chaining the blocks defined in cfg.model.blocks"""
+    """Create a classification model by chaining the blocks defined in cfg.model.blocks"""
 
     inputs = Input(shape=input_shape)
 
@@ -21,9 +21,10 @@ def declarative_model(
             raise ValueError(f"Unknown block type: {block_cfg.type}") from e
 
         params = dict(OmegaConf.to_container(block_cfg.params, resolve=True))
-        params = {
-            k: (num_classes if v == "num_classes" else v) for k, v in params.items()
-        }
+
+        if block_cfg.type == "dense_head":
+            params["num_classes"] = num_classes
+
         x = block_fn(x, **params)
 
     return Model(inputs=inputs, outputs=x)
