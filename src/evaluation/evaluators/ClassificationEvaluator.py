@@ -22,7 +22,12 @@ class ClassificationEvaluator(BaseEvaluator):
     def _predict_labels(
         self, model: Model, test_ds: tf.data.Dataset
     ) -> tuple[np.ndarray, np.ndarray]:
-        """Run inference over a batched dataset"""
+        """Run inference over a batched dataset.
+
+        Returns:
+            (y_true, y_pred) as flat arrays of class indices (post-argmax).
+        """
+
         y_true, y_pred = [], []
 
         for images, labels in test_ds:
@@ -39,7 +44,11 @@ class ClassificationEvaluator(BaseEvaluator):
     def evaluate(
         self, model: Model, test_ds: tf.data.Dataset, class_names: list[str]
     ) -> None:
-        """Evaluate the model on the test dataset"""
+        """Print and save a classification report, accuracy metrics, and a confusion matrix plot.
+
+        See BaseEvaluator.evaluate for the args contract.
+        """
+
         y_true, y_pred = self._predict_labels(model, test_ds)
 
         report = classification_report_dict(y_true, y_pred, class_names)

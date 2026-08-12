@@ -21,7 +21,7 @@ def main(cfg: DictConfig):
 
     # LOAD DATA
     print("[INFO]: Cargando datos...")
-    data_manager = DatasetManager(cfg)
+    data_manager = DatasetManager(cfg.dataset)
     train_ds, val_ds, test_ds = data_manager.load_data()
 
     class_names_path = str(get_checkpoint_dir() / "class_names.json")
@@ -30,7 +30,7 @@ def main(cfg: DictConfig):
 
     # TRAIN
     print("[INFO]: Creando el modelo...")
-    model_manager = BuilderModelManager(cfg)
+    model_manager = BuilderModelManager(cfg.model)
     image_size = tuple(cfg.dataset.loader.params.image_size)
     input_shape = (*image_size, cfg.dataset.num_bands)
     model = model_manager.build(
@@ -38,7 +38,7 @@ def main(cfg: DictConfig):
     )
 
     print("[INFO]: Entrenando el modelo...")
-    trainer = Trainer(cfg, model, train_ds, val_ds)
+    trainer = Trainer(cfg.training, model, train_ds, val_ds)
     model = trainer.train()
     plot_training_curves(trainer.history)
 

@@ -15,7 +15,7 @@ class BaseEvaluator(ABC):
         self._cfg = cfg
 
     def _save_report(self, report: dict, filename: str) -> None:
-        """Persist the classification report as JSON"""
+        """Persist a metrics report as JSON in the current run's evaluation directory."""
         report_path = get_evaluation_dir() / filename
         with open(report_path, "w") as f:
             json.dump(report, f, indent=2)
@@ -24,5 +24,11 @@ class BaseEvaluator(ABC):
     def evaluate(
         self, model: Model, test_ds: tf.data.Dataset, class_names: list[str]
     ) -> None:
-        """Evaluate the model on the test dataset according to cfg.model.task."""
+        """Evaluate a trained model and persist metrics/plots according to cfg.model.task.
+
+        Args:
+            model: A trained Keras model.
+            test_ds: Batched test dataset.
+            class_names: Class names, in the order used by the model's output.
+        """
         pass

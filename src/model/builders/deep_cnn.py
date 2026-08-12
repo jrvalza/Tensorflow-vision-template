@@ -12,7 +12,7 @@ from tensorflow.keras.layers import (
 
 
 def deep_cnn(
-    cfg: DictConfig, input_shape: tuple[int, int, int], num_classes: int
+    cfg_model: DictConfig, input_shape: tuple[int, int, int], num_classes: int
 ) -> Model:
     """
     Build a Deep CNN classification model.
@@ -25,8 +25,8 @@ def deep_cnn(
     Returns:
         The constructed Keras model.
     """
-    batch_norm = cfg.model.batch_norm
-    dropout_rate = cfg.model.dropout_rate
+    batch_norm = cfg_model.batch_norm
+    dropout_rate = cfg_model.dropout_rate
 
     inputs = Input(shape=input_shape)
 

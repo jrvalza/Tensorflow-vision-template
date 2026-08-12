@@ -10,7 +10,20 @@ CALLBACK_REGISTRY: dict[str, type[Callback]] = {
 
 
 def resolve_callbacks(cfg_training: DictConfig) -> list[Callback]:
-    """Resolve and instantiate the configured callback"""
+    """Instantiate the callbacks configured in cfg.training.callbacks.
+
+    Args:
+        cfg_training: 'training' section of the config. callbacks must be a
+            list of {name, params} entries, name being a key in
+            CALLBACK_REGISTRY. For ModelCheckpoint, filepath is injected
+            automatically if not set.
+
+    Returns:
+        The instantiated Keras callbacks, in configured order.
+
+    Raises:
+        ValueError: If a callback name is not registered.
+    """
     callbacks = []
     for cfg_callback in cfg_training.callbacks:
 

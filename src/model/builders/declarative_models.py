@@ -7,14 +7,28 @@ from src.model.blocks import BLOCKS_REGISTRY
 
 
 def declarative_classification_model(
-    cfg: DictConfig, input_shape: tuple[int, int, int], num_classes: int
+    cfg_model: DictConfig, input_shape: tuple[int, int, int], num_classes: int
 ) -> Model:
-    """Create a classification model by chaining the blocks defined in cfg.model.blocks"""
+    """Build a classification model by chaining the blocks in cfg.model.blocks.
+
+    Args:
+        cfg_model: 'model' section of the config. blocks must be a list of {type, params}
+            entries, type being a key in BLOCKS_REGISTRY. num_classes is
+            injected automatically into dense_head params.
+        input_shape: Input image shape as (height, width, channels).
+        num_classes: Number of target classes for the output layer.
+
+    Returns:
+        The constructed, uncompiled Keras model.
+
+    Raises:
+        ValueError: If a block type is not registered.
+    """
 
     inputs = Input(shape=input_shape)
 
     x = inputs
-    for block_cfg in cfg.model.blocks:
+    for block_cfg in cfg_model.blocks:
         try:
             block_fn = BLOCKS_REGISTRY[block_cfg.type]
         except KeyError as e:

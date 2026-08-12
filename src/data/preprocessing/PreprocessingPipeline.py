@@ -10,16 +10,20 @@ PreprocessingStep: TypeAlias = Callable[
 
 
 class PreprocessingPipeline:
-    """Apply the preprocessing steps configured in the dataset configuration"""
+    """Applies the steps configured in cfg.dataset.preprocessing.steps to a dataset."""
 
-    def __init__(self, cfg: DictConfig) -> None:
-        self._cfg = cfg
+    def __init__(self, cfg_dataset: DictConfig) -> None:
+        self._cfg_dataset = cfg_dataset
         self._steps_registry: dict[str, PreprocessingStep] = {
             "pixel-value-normalization": self._pixel_value_normalization
         }
 
     def _resolve_step(self, step_name: str) -> PreprocessingStep:
-        """Resolve a preprocessing step name to its corresponding function"""
+        """Resolve a preprocessing step name to its corresponding function.
+
+        Raises:
+            ValueError: If step_name is not registered.
+        """
         try:
             return self._steps_registry[step_name]
         except KeyError as e:
@@ -36,7 +40,7 @@ class PreprocessingPipeline:
         """Apply the configured preprocessing pipeline to a dataset."""
         process_fns: list[PreprocessingStep] = [
             self._resolve_step(step_name)
-            for step_name in self._cfg.dataset.preprocessing.steps
+            for step_name in self._cfg_dataset.preprocessing.steps
         ]
 
         if not process_fns:

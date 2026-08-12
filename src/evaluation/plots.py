@@ -15,7 +15,8 @@ def save_figure(fig: Figure, filename: str) -> None:
 
 
 def plot_training_curves(history: History) -> None:
-    """Plot every non-validation metric in a Keras History (train vs val)"""
+    """Plot train vs validation curves for every metric in history, saved as training_curves.png."""
+
     metrics = [metric for metric in history.history if not metric.startswith("val_")]
 
     fig, axes = plt.subplots(
@@ -49,7 +50,7 @@ def plot_training_curves(history: History) -> None:
 
 
 def plot_confusion_matrix(cm: np.ndarray, class_names: list[str]) -> None:
-    """Plot a confusion matrix heatmap."""
+    """Plot a confusion matrix heatmap, saved as confusion_matrix.png."""
     fig, ax = plt.subplots(
         figsize=(max(6, len(class_names)), max(5, len(class_names) * 0.8)),
         constrained_layout=True,
