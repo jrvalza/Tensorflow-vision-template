@@ -9,7 +9,7 @@ from .builders.declarative_models import declarative_classification_model
 class BuilderModelManager:
     """Builds a Keras model from the architecture configured in cfg.model.builder."""
 
-    BUILDER_REGISTRY: dict[str, Callable] = {
+    BUILDER_REGISTRY: dict[str, Callable[..., Model]] = {
         "deep_cnn": deep_cnn,
         "declarative_classification_model": declarative_classification_model,
     }

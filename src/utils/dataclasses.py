@@ -41,7 +41,7 @@ class DatasetConfig:
 
 @dataclass
 class ModelConfig:
-    """Configuration for model creation and training"""
+    """Configuration for model construction."""
 
     model_name: str
     builder: str

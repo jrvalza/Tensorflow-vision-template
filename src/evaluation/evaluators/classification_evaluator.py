@@ -13,14 +13,14 @@ from src.evaluation.metrics import (
 )
 
 from src.evaluation.plots import plot_confusion_matrix
-from src.evaluation.evaluators.BaseEvaluator import BaseEvaluator
+from src.evaluation.evaluators.base_evaluator import BaseEvaluator
 
 
 class ClassificationEvaluator(BaseEvaluator):
     """Evaluate a classification model: report + confusion matrix."""
 
     def _predict_labels(
-        self, model: Model, test_ds: tf.data.Dataset
+        self, model: Model, test_ds: tf.data.Dataset, label_mode: str
     ) -> tuple[np.ndarray, np.ndarray]:
         """Run inference over a batched dataset.
 
@@ -34,7 +34,7 @@ class ClassificationEvaluator(BaseEvaluator):
 
             y_pred.append(np.argmax(model.predict(images, verbose=0), axis=-1))
 
-            if self._cfg.dataset.loader.params.label_mode == "categorical":
+            if label_mode == "categorical":
                 y_true.append(np.argmax(labels.numpy(), axis=-1))
             else:
                 y_true.append(labels.numpy().squeeze())
@@ -42,19 +42,24 @@ class ClassificationEvaluator(BaseEvaluator):
         return np.concatenate(y_true), np.concatenate(y_pred)
 
     def evaluate(
-        self, model: Model, test_ds: tf.data.Dataset, class_names: list[str]
+        self,
+        model: Model,
+        test_ds: tf.data.Dataset,
+        class_names: list[str],
+        label_mode: str,
     ) -> None:
         """Print and save a classification report, accuracy metrics, and a confusion matrix plot.
 
         See BaseEvaluator.evaluate for the args contract.
         """
 
-        y_true, y_pred = self._predict_labels(model, test_ds)
+        y_true, y_pred = self._predict_labels(model, test_ds, label_mode)
 
         report = classification_report_dict(y_true, y_pred, class_names)
         oa = compute_accuracy(y_true, y_pred)
         b_acc = compute_balanced_accuracy(y_true, y_pred)
         kappa = compute_cohen_kappa(y_true, y_pred)
+
         print(classification_report_text(y_true, y_pred, class_names))
         print(f"Overall Accuracy : {oa}")
         print(f"Balanced Accuracy : {b_acc}")

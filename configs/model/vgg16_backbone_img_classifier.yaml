@@ -1,0 +1,13 @@
+
+model_name: "Image Classifier with VGG16 transfer learning"
+builder: "declarative_classification_model"
+task: "classification"
+
+blocks:
+
+  - type: vgg16_backbone
+    params: {trainable_blocks: [block5], target_size: [224,224], weights: imagenet, include_top: false}
+
+  - type: dense_head
+    params: {units: [1000, 200], output_activation: softmax, batch_norm: false, dropout_rate: 0.3}
+

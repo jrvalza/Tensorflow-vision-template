@@ -2,9 +2,9 @@ import json
 import tensorflow as tf
 from omegaconf import DictConfig
 
-from .loaders.BaseDatasetLoader import BaseDatasetLoader
-from .loaders.LocalDirectoryDatasetLoader import LocalDirectoryDatasetLoader
-from .preprocessing.PreprocessingPipeline import PreprocessingPipeline
+from .loaders.base_dataset_loader import BaseDatasetLoader
+from .loaders.local_directory_dataset_loader import LocalDirectoryDatasetLoader
+from .preprocessing.preprocessing_pipeline import PreprocessingPipeline
 
 AUTOTUNE = tf.data.AUTOTUNE
 

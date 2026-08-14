@@ -1,6 +1,6 @@
 import tensorflow as tf
 from omegaconf import DictConfig, OmegaConf
-from .BaseDatasetLoader import BaseDatasetLoader
+from .base_dataset_loader import BaseDatasetLoader
 
 
 class LocalDirectoryDatasetLoader(BaseDatasetLoader):

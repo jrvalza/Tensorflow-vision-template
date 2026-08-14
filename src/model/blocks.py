@@ -19,7 +19,7 @@ POOLING_REGISTRY: dict[str, Callable[..., Layer]] = {
 }
 
 
-def conv2d_block(
+def conv2d(
     x: tf.Tensor,
     filters: int,
     activation: str = "relu",
@@ -92,7 +92,7 @@ def dense_head(
     return Dense(num_classes, activation=output_activation)(x)
 
 
-def vgg16_backbone_block(
+def vgg16_backbone(
     x: tf.Tensor,
     trainable_blocks: list[str],
     target_size: tuple[int, int],
@@ -112,7 +112,9 @@ def vgg16_backbone_block(
         Output tensor produced by the VGG16 backbone.
     """
 
-    x = Conv2D(filters=3, kernel_size=(1, 1), padding="same", activation="relu")(x)
+    x = Conv2D(
+        filters=3, kernel_size=(1, 1), strides=(1, 1), padding="same", activation="relu"
+    )(x)
     x = Resizing(*target_size)(x)
 
     base_model = VGG16(
@@ -128,7 +130,7 @@ def vgg16_backbone_block(
 
 
 BLOCKS_REGISTRY: dict[str, Callable[..., tf.Tensor]] = {
-    "conv2d_block": conv2d_block,
+    "conv2d_block": conv2d,
     "dense_head": dense_head,
-    "vgg16_backbone": vgg16_backbone_block,
+    "vgg16_backbone": vgg16_backbone,
 }

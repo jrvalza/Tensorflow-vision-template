@@ -2,10 +2,10 @@ import json
 import hydra
 from omegaconf import DictConfig, OmegaConf
 
-from src.training.Trainer import Trainer
-from src.model.BuilderModelManager import BuilderModelManager
-from src.data.DatasetManager import DatasetManager
-from src.evaluation.EvaluatorManager import EvaluatorManager
+from src.training.trainer import Trainer
+from src.dataset.dataset_manager import DatasetManager
+from src.evaluation.evaluator_manager import EvaluatorManager
+from src.model.builder_model_manager import BuilderModelManager
 
 from src.utils.dataclasses import TrainConfig
 from src.utils.paths import get_checkpoint_dir
@@ -43,9 +43,14 @@ def main(cfg: DictConfig):
     plot_training_curves(trainer.history)
 
     print("[INFO]: Evaluando el modelo...")
-    evaluator_manager = EvaluatorManager(cfg)
+    evaluator_manager = EvaluatorManager(cfg.model)
     evaluator = evaluator_manager.build_evaluator()
-    evaluator.evaluate(model, test_ds, class_names=data_manager.class_names)
+    evaluator.evaluate(
+        model,
+        test_ds,
+        class_names=data_manager.class_names,
+        label_mode=cfg.dataset.loader.params.label_mode,
+    )
 
     print("[INFO]: Fin.")
 

@@ -1,8 +1,8 @@
 import json
 from omegaconf import DictConfig
 
-from src.evaluation.evaluators.BaseEvaluator import BaseEvaluator
-from src.evaluation.evaluators.ClassificationEvaluator import ClassificationEvaluator
+from src.evaluation.evaluators.base_evaluator import BaseEvaluator
+from src.evaluation.evaluators.classification_evaluator import ClassificationEvaluator
 
 
 class EvaluatorManager:
@@ -12,8 +12,8 @@ class EvaluatorManager:
         "classification": ClassificationEvaluator
     }
 
-    def __init__(self, cfg: DictConfig) -> None:
-        self._cfg = cfg
+    def __init__(self, cfg_model: DictConfig) -> None:
+        self._cfg_model = cfg_model
 
     def __str__(self) -> str:
         """List the available evaluators."""
@@ -34,7 +34,7 @@ class EvaluatorManager:
         """
 
         try:
-            evaluator_cls = self.TASK_EVALUATOR_REGISTRY[self._cfg.model.task]
+            evaluator_cls = self.TASK_EVALUATOR_REGISTRY[self._cfg_model.task]
         except KeyError as e:
-            raise ValueError(f"Unknown task: {self._cfg.model.task}") from e
-        return evaluator_cls(self._cfg)
+            raise ValueError(f"Unknown task: {self._cfg_model.task}") from e
+        return evaluator_cls()

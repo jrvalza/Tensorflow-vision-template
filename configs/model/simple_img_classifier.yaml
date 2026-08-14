@@ -1,20 +1,20 @@
 
-model_name: "CNN_from_scratch"
+model_name: "Image Classifier from Scratch"
 builder: "declarative_classification_model"
 task: "classification"
 
 blocks:
 
-  - type: conv2d_block
+  - type: conv2d
     params: {filters: 32, activation: relu, batch_norm: true}
 
-  - type: conv2d_block
+  - type: conv2d
     params: {filters: 32, activation: relu, batch_norm: true, pooling: max2d, dropout_rate: 0.25}
 
-  - type: conv2d_block
+  - type: conv2d
     params: {filters: 64, activation: relu, batch_norm: true}
 
-  - type: conv2d_block
+  - type: conv2d
     params: {filters: 64, activation: relu, batch_norm: true, pooling: max2d, dropout_rate: 0.25}
 
   - type: dense_head

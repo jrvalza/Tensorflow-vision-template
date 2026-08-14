@@ -11,9 +11,6 @@ from src.utils.paths import get_evaluation_dir
 class BaseEvaluator(ABC):
     """Base interface for task-specific model evaluation"""
 
-    def __init__(self, cfg: DictConfig) -> None:
-        self._cfg = cfg
-
     def _save_report(self, report: dict, filename: str) -> None:
         """Persist a metrics report as JSON in the current run's evaluation directory."""
         report_path = get_evaluation_dir() / filename
@@ -22,13 +19,18 @@ class BaseEvaluator(ABC):
 
     @abstractmethod
     def evaluate(
-        self, model: Model, test_ds: tf.data.Dataset, class_names: list[str]
+        self,
+        model: Model,
+        test_ds: tf.data.Dataset,
+        class_names: list[str],
+        label_mode: str,
     ) -> None:
         """Evaluate a trained model and persist metrics/plots according to cfg.model.task.
 
         Args:
-            model: A trained Keras model.
+            model: A trained Keras model to evaluate.
             test_ds: Batched test dataset.
             class_names: Class names, in the order used by the model's output.
+            label_mode: Label encoding used by the dataset, e.g. 'categorical', 'binary', or 'int'.
         """
         pass
