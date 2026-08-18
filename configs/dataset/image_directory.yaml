@@ -15,5 +15,28 @@ loader:
     shuffle: True
     
 preprocessing:
-    steps:
-        - "pixel-value-normalization"
+  steps:
+    - name: "pixel-value-normalization"
+      params:
+        value: 255.0
+
+augmentation:
+  enabled: true
+  transforms:
+    - name: "random-flip"
+      params:
+        mode: "horizontal_and_vertical"
+    
+    - name: "random-rotation"
+      params:
+        factor: 0.25
+
+    - name: "random-zoom"
+      params:
+        height_factor: 0.2
+        width_factor: 0.2
+    
+    - name: "random-translation"
+      params:
+        height_factor: 0.2
+        width_factor: 0.2

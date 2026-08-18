@@ -1,6 +1,7 @@
 from typing import TypeAlias
-from omegaconf import DictConfig
+from functools import partial
 from collections.abc import Callable
+from omegaconf import DictConfig, OmegaConf
 
 import tensorflow as tf
 
@@ -18,29 +19,35 @@ class PreprocessingPipeline:
             "pixel-value-normalization": self._pixel_value_normalization
         }
 
-    def _resolve_step(self, step_name: str) -> PreprocessingStep:
+    def _resolve_step(self, step_dict: DictConfig) -> PreprocessingStep:
         """Resolve a preprocessing step name to its corresponding function.
 
         Raises:
-            ValueError: If step_name is not registered.
+            ValueError: If step name is not registered.
         """
+        config = dict(OmegaConf.to_container(step_dict, resolve=True))
+        step_name = config["name"]
+        params = config.get("params", {})
+
         try:
-            return self._steps_registry[step_name]
+            step = self._steps_registry[step_name]
         except KeyError as e:
             raise ValueError(f"Unknown preprocessing step: {step_name}") from e
 
+        return partial(step, **params)
+
     def _pixel_value_normalization(
-        self, image: tf.Tensor, label: tf.Tensor
+        self, image: tf.Tensor, label: tf.Tensor, value: float = 255.0
     ) -> tuple[tf.Tensor, tf.Tensor]:
-        """Normalize image pixel values by scaling them from [0, 255] to [0, 1]."""
-        image = tf.cast(image / 255.0, tf.float32)
+        """Normalize image pixel values by scaling them to [0, 1]."""
+        image = tf.cast(image / value, tf.float32)
         return image, label
 
     def apply(self, dataset: tf.data.Dataset) -> tf.data.Dataset:
         """Apply the configured preprocessing pipeline to a dataset."""
         process_fns: list[PreprocessingStep] = [
-            self._resolve_step(step_name)
-            for step_name in self._cfg_dataset.preprocessing.steps
+            self._resolve_step(step_dict)
+            for step_dict in self._cfg_dataset.preprocessing.steps
         ]
 
         if not process_fns:

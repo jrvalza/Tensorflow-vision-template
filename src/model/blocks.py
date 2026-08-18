@@ -43,7 +43,6 @@ def conv2d(
     Raises:
         ValueError: If an unknown pooling layer is specified.
     """
-
     x = Conv2D(filters, (3, 3), padding="same", activation=activation)(x)
 
     if batch_norm:
@@ -111,7 +110,6 @@ def vgg16_backbone(
     Returns:
         Output tensor produced by the VGG16 backbone.
     """
-
     x = Conv2D(
         filters=3, kernel_size=(1, 1), strides=(1, 1), padding="same", activation="relu"
     )(x)
@@ -130,7 +128,7 @@ def vgg16_backbone(
 
 
 BLOCKS_REGISTRY: dict[str, Callable[..., tf.Tensor]] = {
-    "conv2d_block": conv2d,
+    "conv2d": conv2d,
     "dense_head": dense_head,
     "vgg16_backbone": vgg16_backbone,
 }

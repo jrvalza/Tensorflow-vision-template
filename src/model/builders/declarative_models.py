@@ -24,7 +24,6 @@ def declarative_classification_model(
     Raises:
         ValueError: If a block type is not registered.
     """
-
     inputs = Input(shape=input_shape)
 
     x = inputs

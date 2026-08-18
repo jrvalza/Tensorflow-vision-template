@@ -22,7 +22,15 @@ class BlockConfig:
 class PreprocessingConfig:
     """Configuration for the preprocessing pipeline"""
 
-    steps: list[str] = field(default_factory=list)
+    steps: list[ParamsConfig] = field(default_factory=list)
+
+
+@dataclass
+class AugmentationConfig:
+    """Configuration for the augmentation pipeline"""
+
+    enabled: bool
+    transforms: list[ParamsConfig] = field(default_factory=list)
 
 
 @dataclass
@@ -37,6 +45,7 @@ class DatasetConfig:
     loader: ParamsConfig
 
     preprocessing: PreprocessingConfig
+    augmentation: AugmentationConfig
 
 
 @dataclass

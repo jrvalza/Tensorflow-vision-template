@@ -1,6 +1,6 @@
 
 defaults:
   - dataset: image_directory
-  - model: vgg16_backbone_img_classifier
+  - model: simple_img_classifier
   - training: default
   

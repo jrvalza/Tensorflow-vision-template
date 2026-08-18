@@ -54,7 +54,6 @@ class LocalDirectoryDatasetLoader(BaseDatasetLoader):
             ValueError: If cfg.dataset.num_bands has no matching color mode
                 (see COLOR_MODES).
         """
-
         color_mode = self.COLOR_MODES.get(self._cfg_dataset.num_bands)
 
         if color_mode is None:
@@ -83,7 +82,6 @@ class LocalDirectoryDatasetLoader(BaseDatasetLoader):
         Returns:
             A tuple containing the training, validation and test datasets.
         """
-
         train_ds = self._create_dataset(
             directory=self._cfg_dataset.train_dir, subset="training"
         )

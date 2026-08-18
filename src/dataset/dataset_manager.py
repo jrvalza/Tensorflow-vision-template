@@ -4,6 +4,7 @@ from omegaconf import DictConfig
 
 from .loaders.base_dataset_loader import BaseDatasetLoader
 from .loaders.local_directory_dataset_loader import LocalDirectoryDatasetLoader
+from .preprocessing.augmentation_pipeline import AugmentationPipeline
 from .preprocessing.preprocessing_pipeline import PreprocessingPipeline
 
 AUTOTUNE = tf.data.AUTOTUNE
@@ -20,6 +21,7 @@ class DatasetManager:
         self._cfg_dataset = cfg_dataset
         self._loader: BaseDatasetLoader | None = None
         self._preprocess_pipeline = PreprocessingPipeline(cfg_dataset)
+        self._augmentation_pipeline = AugmentationPipeline(cfg_dataset)
 
     def __str__(self) -> str:
         """List the available dataset loaders."""
@@ -71,9 +73,14 @@ class DatasetManager:
 
         train_ds, val_ds, test_ds = self._loader.load_data()
 
+        # preprocessing
         train_ds = self._preprocess_pipeline.apply(train_ds)
         val_ds = self._preprocess_pipeline.apply(val_ds)
         test_ds = self._preprocess_pipeline.apply(test_ds)
+
+        # augmentation
+        if self._cfg_dataset.augmentation.enabled:
+            train_ds = self._augmentation_pipeline.apply(train_ds)
 
         train_ds = train_ds.prefetch(AUTOTUNE)
         val_ds = val_ds.prefetch(AUTOTUNE)

@@ -32,7 +32,6 @@ class EvaluatorManager:
         Raises:
             ValueError: If cfg.model.task is not registered.
         """
-
         try:
             evaluator_cls = self.TASK_EVALUATOR_REGISTRY[self._cfg_model.task]
         except KeyError as e:

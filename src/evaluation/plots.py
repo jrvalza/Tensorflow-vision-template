@@ -16,7 +16,6 @@ def save_figure(fig: Figure, filename: str) -> None:
 
 def plot_training_curves(history: History) -> None:
     """Plot train vs validation curves for every metric in history, saved as training_curves.png."""
-
     metrics = [metric for metric in history.history if not metric.startswith("val_")]
 
     fig, axes = plt.subplots(

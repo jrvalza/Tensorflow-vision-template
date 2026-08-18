@@ -27,7 +27,6 @@ class ClassificationEvaluator(BaseEvaluator):
         Returns:
             (y_true, y_pred) as flat arrays of class indices (post-argmax).
         """
-
         y_true, y_pred = [], []
 
         for images, labels in test_ds:
@@ -52,7 +51,6 @@ class ClassificationEvaluator(BaseEvaluator):
 
         See BaseEvaluator.evaluate for the args contract.
         """
-
         y_true, y_pred = self._predict_labels(model, test_ds, label_mode)
 
         report = classification_report_dict(y_true, y_pred, class_names)

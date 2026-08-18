@@ -22,7 +22,6 @@ def resolve_optimizer(cfg_training: DictConfig) -> Optimizer:
     Raises:
         ValueError: If optimizer.name is not registered.
     """
-
     try:
         optimizer_cls = OPTIMIZER_REGISTRY[cfg_training.optimizer.name]
     except KeyError as e:
