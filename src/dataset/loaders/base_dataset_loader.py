@@ -14,13 +14,11 @@ class BaseDatasetLoader(ABC):
     @abstractmethod
     def num_classes(self) -> int | None:
         """Number of classes in the dataset, or None if not loaded yet."""
-        pass
 
     @property
     @abstractmethod
     def class_names(self) -> list[str] | None:
         """Dataset class names, or None if not loaded yet."""
-        pass
 
     @abstractmethod
     def load_data(self) -> tuple[tf.data.Dataset, tf.data.Dataset, tf.data.Dataset]:
@@ -29,4 +27,3 @@ class BaseDatasetLoader(ABC):
         Returns:
             (train_ds, val_ds, test_ds).
         """
-        pass

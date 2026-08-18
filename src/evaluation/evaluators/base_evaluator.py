@@ -33,4 +33,3 @@ class BaseEvaluator(ABC):
             class_names: Class names, in the order used by the model's output.
             label_mode: Label encoding used by the dataset, e.g. 'categorical', 'binary', or 'int'.
         """
-        pass

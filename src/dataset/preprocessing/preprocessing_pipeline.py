@@ -1,31 +1,29 @@
-from typing import TypeAlias
 from functools import partial
-from collections.abc import Callable
 from omegaconf import DictConfig, OmegaConf
 
 import tensorflow as tf
 
-PreprocessingStep: TypeAlias = Callable[
-    [tf.Tensor, tf.Tensor], tuple[tf.Tensor, tf.Tensor]
-]
+from .base_step_pipeline import BaseStepPipeline, Step
 
 
-class PreprocessingPipeline:
+class PreprocessingPipeline(BaseStepPipeline):
     """Applies the steps configured in cfg.dataset.preprocessing.steps to a dataset."""
 
     def __init__(self, cfg_dataset: DictConfig) -> None:
-        self._cfg_dataset = cfg_dataset
-        self._steps_registry: dict[str, PreprocessingStep] = {
+        self._steps_registry: dict[str, Step] = {
             "pixel-value-normalization": self._pixel_value_normalization
         }
+        super().__init__(cfg_dataset)
 
-    def _resolve_step(self, step_dict: DictConfig) -> PreprocessingStep:
-        """Resolve a preprocessing step name to its corresponding function.
+    def _config_entries(self, cfg_dataset: DictConfig) -> list[DictConfig]:
+        return cfg_dataset.preprocessing.steps
 
+    def _resolve_entry(self, entry: DictConfig) -> Step:
+        """
         Raises:
             ValueError: If step name is not registered.
         """
-        config = dict(OmegaConf.to_container(step_dict, resolve=True))
+        config = dict(OmegaConf.to_container(entry, resolve=True))
         step_name = config["name"]
         params = config.get("params", {})
 
@@ -33,31 +31,10 @@ class PreprocessingPipeline:
             step = self._steps_registry[step_name]
         except KeyError as e:
             raise ValueError(f"Unknown preprocessing step: {step_name}") from e
-
         return partial(step, **params)
 
     def _pixel_value_normalization(
         self, image: tf.Tensor, label: tf.Tensor, value: float = 255.0
     ) -> tuple[tf.Tensor, tf.Tensor]:
-        """Normalize image pixel values by scaling them to [0, 1]."""
-        image = tf.cast(image / value, tf.float32)
-        return image, label
-
-    def apply(self, dataset: tf.data.Dataset) -> tf.data.Dataset:
-        """Apply the configured preprocessing pipeline to a dataset."""
-        process_fns: list[PreprocessingStep] = [
-            self._resolve_step(step_dict)
-            for step_dict in self._cfg_dataset.preprocessing.steps
-        ]
-
-        if not process_fns:
-            return dataset
-
-        def preprocess(
-            image: tf.Tensor, label: tf.Tensor
-        ) -> tuple[tf.Tensor, tf.Tensor]:
-            for fn in process_fns:
-                image, label = fn(image, label)
-            return image, label
-
-        return dataset.map(preprocess, num_parallel_calls=tf.data.AUTOTUNE)
+        """Scale image pixel values to [0, 1]."""
+        return tf.cast(image / value, tf.float32), label

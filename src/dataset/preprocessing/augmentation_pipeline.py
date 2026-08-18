@@ -9,10 +9,11 @@ from tensorflow.keras.layers import (
     RandomTranslation,
     Layer,
 )
+from .base_step_pipeline import BaseStepPipeline, Step
 
 
-class AugmentationPipeline:
-    """Applies the transformations configured in cfg.dataset.augmentation.transforms to a dataset."""
+class AugmentationPipeline(BaseStepPipeline):
+    """Applies the transforms configured in cfg.dataset.augmentation.transforms to a dataset."""
 
     LAYER_REGISTRY: dict[str, Callable[..., Layer]] = {
         "random-flip": RandomFlip,
@@ -22,18 +23,17 @@ class AugmentationPipeline:
     }
 
     def __init__(self, cfg_dataset: DictConfig) -> None:
-        self._layers: list[Layer] = [
-            self._build_layer(transform_dict)
-            for transform_dict in cfg_dataset.augmentation.transforms
-        ]
+        super().__init__(cfg_dataset)
 
-    def _build_layer(self, transform_dict: DictConfig) -> Layer:
-        """Instantiate the Keras layer configured in a single transform entry.
+    def _config_entries(self, cfg_dataset: DictConfig) -> list[DictConfig]:
+        return cfg_dataset.augmentation.transforms
 
+    def _resolve_entry(self, entry: DictConfig) -> Step:
+        """
         Raises:
             ValueError: If transform name is not registered.
         """
-        config = dict(OmegaConf.to_container(transform_dict, resolve=True))
+        config = dict(OmegaConf.to_container(entry, resolve=True))
         transform_name = config["name"]
         params = config.get("params", {})
 
@@ -41,16 +41,10 @@ class AugmentationPipeline:
             layer_cls = self.LAYER_REGISTRY[transform_name]
         except KeyError as e:
             raise ValueError(f"Unknown augmentation transform: {transform_name}") from e
-        return layer_cls(**params)
 
-    def apply(self, dataset: tf.data.Dataset) -> tf.data.Dataset:
-        """Apply the configured augmentation layers to a dataset, in order"""
-        if not self._layers:
-            return dataset
+        layer = layer_cls(**params)
 
-        def augment(image: tf.Tensor, label: tf.Tensor) -> tuple[tf.Tensor, tf.Tensor]:
-            for layer in self._layers:
-                image = layer(image, training=True)
-            return image, label
+        def step(image: tf.Tensor, label: tf.Tensor) -> tuple[tf.Tensor, tf.Tensor]:
+            return layer(image, training=True), label
 
-        return dataset.map(augment, num_parallel_calls=tf.data.AUTOTUNE)
+        return step

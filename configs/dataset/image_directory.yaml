@@ -33,10 +33,10 @@ augmentation:
 
     - name: "random-zoom"
       params:
-        height_factor: 0.2
-        width_factor: 0.2
+        height_factor: 0.05
+        width_factor: 0.05
     
     - name: "random-translation"
       params:
-        height_factor: 0.2
-        width_factor: 0.2
+        height_factor: 0.05
+        width_factor: 0.05
