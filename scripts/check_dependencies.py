@@ -1,0 +1,16 @@
+import tensorflow as tf
+import sklearn
+import numpy as np
+import matplotlib
+import hydra
+import omegaconf
+
+print('Tensorflow version: ', tf.__version__)
+print('GPUS: ', tf.config.list_physical_devices('GPU'))
+print('GPUS: ', tf.config.list_physical_devices('GPU').__len__() > 0)
+
+print('Scikit-learn version: ', sklearn.__version__)
+print('Numpy version: ', np.__version__)
+print('matplotlib version: ', matplotlib.__version__)
+print('Hydra version: ', hydra.__version__)
+print('OmegaConf version: ', omegaconf.__version__)

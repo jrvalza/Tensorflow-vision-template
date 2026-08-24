@@ -5,3 +5,6 @@ raw_data/
 
 __pycache__/
 *.py[cod]
+
+.venv/
+requirements-dev.txt
