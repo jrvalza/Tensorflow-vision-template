@@ -1,0 +1,25 @@
+services:
+  tensorflow-ngc-2402:
+    container_name: tensorflow-ngc-2402
+
+    build: .
+    image: tensorflow-ngc-2402
+    
+    ipc: host
+    
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: all
+              capabilities: [gpu]
+
+    volumes:
+      - ./configs:/workspace/configs
+      - ./outputs:/workspace/outputs
+      - ./raw_data:/workspace/raw_data
+      - ./src:/workspace/src
+      - ./train.py:/workspace/train.py
+
+    command: python3 train.py
