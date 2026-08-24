@@ -1,11 +1,12 @@
-
 dataset_name: "PNOA-ortoimagenes"
+
 num_bands: 4
-train_dir: "raw_data/Train"
-test_dir: "raw_data/Test"
+
+train_dir: "raw_data/classification/multiclass/Train"
+test_dir: "raw_data/classification/multiclass/Test"
 
 loader: 
-  name: "from_local_directory"
+  name: "image_dataset_from_directory"
   params:
     batch_size: 32
     image_size: [32, 32]

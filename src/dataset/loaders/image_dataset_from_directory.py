@@ -3,7 +3,7 @@ from omegaconf import DictConfig, OmegaConf
 from .base_dataset_loader import BaseDatasetLoader
 
 
-class LocalDirectoryDatasetLoader(BaseDatasetLoader):
+class ImageDatasetFromDirectory(BaseDatasetLoader):
     """Load image datasets from a directory tree structured as one subfolder per class."""
 
     COLOR_MODES: dict[int, str] = {

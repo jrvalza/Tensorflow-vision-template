@@ -1,12 +1,11 @@
-
 epochs: 10
+
 metrics: ["accuracy"]
 
 loss:
-  name: categorical-crossentropy
+  name: sparse-categorical-crossentropy
   params:
     from_logits: false
-    label_smoothing: 0.0
 
 optimizer:
   name: adam
@@ -22,3 +21,5 @@ callbacks:
     params:
       monitor: val_accuracy
       save_best_only: true
+
+verbose: 1

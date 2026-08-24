@@ -50,6 +50,7 @@ class Trainer:
             self._train_ds,
             validation_data=self._val_ds,
             epochs=self._cfg_training.epochs,
+            verbose=self._cfg_training.verbose,
             callbacks=callbacks,
         )
         return self._model

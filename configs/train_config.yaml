@@ -1,6 +1,5 @@
-
 defaults:
-  - dataset: image_directory
-  - model: simple_img_classifier
-  - training: default
+  - dataset: pnoa_multiclass
+  - model: simple_classifier
+  - training: default_multiclass_classifier
   

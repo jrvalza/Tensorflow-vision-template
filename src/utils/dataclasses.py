@@ -63,6 +63,7 @@ class TrainingConfig:
     """Configuration for training model"""
 
     epochs: int
+    verbose: int
     loss: ParamsConfig
     optimizer: ParamsConfig
     metrics: list[str] = field(default_factory=list)

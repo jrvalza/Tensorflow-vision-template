@@ -3,7 +3,7 @@ import tensorflow as tf
 from omegaconf import DictConfig
 
 from .loaders.base_dataset_loader import BaseDatasetLoader
-from .loaders.local_directory_dataset_loader import LocalDirectoryDatasetLoader
+from .loaders.image_dataset_from_directory import ImageDatasetFromDirectory
 from .preprocessing.augmentation_pipeline import AugmentationPipeline
 from .preprocessing.preprocessing_pipeline import PreprocessingPipeline
 
@@ -14,7 +14,7 @@ class DatasetManager:
     """Loads and preprocesses datasets based on cfg.dataset.loader.name."""
 
     LOADER_REGISTRY: dict[str, type[BaseDatasetLoader]] = {
-        "from_local_directory": LocalDirectoryDatasetLoader
+        "image_dataset_from_directory": ImageDatasetFromDirectory
     }
 
     def __init__(self, cfg_dataset: DictConfig) -> None:

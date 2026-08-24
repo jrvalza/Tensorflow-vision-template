@@ -12,14 +12,10 @@ services:
         reservations:
           devices:
             - driver: nvidia
-              count: all
+              count: all #device_ids: ['0']
               capabilities: [gpu]
 
     volumes:
-      - ./configs:/workspace/configs
-      - ./outputs:/workspace/outputs
-      - ./raw_data:/workspace/raw_data
-      - ./src:/workspace/src
-      - ./train.py:/workspace/train.py
+      - .:/workspace
 
     command: python3 train.py

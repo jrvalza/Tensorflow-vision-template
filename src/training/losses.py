@@ -1,8 +1,13 @@
 from omegaconf import DictConfig, OmegaConf
-from tensorflow.keras.losses import CategoricalCrossentropy, Loss
+from tensorflow.keras.losses import (
+    CategoricalCrossentropy,
+    SparseCategoricalCrossentropy,
+    Loss,
+)
 
 LOSS_REGISTRY: dict[str, type[Loss]] = {
-    "categorical-crossentropy": CategoricalCrossentropy
+    "categorical-crossentropy": CategoricalCrossentropy,
+    "sparse-categorical-crossentropy": SparseCategoricalCrossentropy,
 }
 
 

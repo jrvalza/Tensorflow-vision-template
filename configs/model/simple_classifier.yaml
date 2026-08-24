@@ -1,8 +1,8 @@
-
-model_name: "Image Classifier from Scratch"
-builder: "declarative_classification_model"
 task: "classification"
 
+model_name: "CNN-from-Scratch"
+
+builder: "declarative_classification_model"
 blocks:
 
   - type: conv2d
@@ -19,4 +19,3 @@ blocks:
 
   - type: dense_head
     params: {units: [512], output_activation: softmax, batch_norm: true, dropout_rate: 0.5}
-

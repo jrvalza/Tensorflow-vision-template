@@ -1,8 +1,8 @@
-
-model_name: "Image Classifier with VGG16 transfer learning"
-builder: "declarative_classification_model"
 task: "classification"
 
+model_name: "CNN-with-VGG16-transfer-learning"
+
+builder: "declarative_classification_model"
 blocks:
 
   - type: vgg16_backbone
@@ -10,4 +10,3 @@ blocks:
 
   - type: dense_head
     params: {units: [1000, 200], output_activation: softmax, batch_norm: false, dropout_rate: 0.3}
-
