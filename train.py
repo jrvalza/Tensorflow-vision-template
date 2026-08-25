@@ -10,6 +10,7 @@ from src.model.builder_model_manager import BuilderModelManager
 from src.utils.dataclasses import TrainConfig
 from src.utils.paths import get_checkpoint_dir
 from src.evaluation.plots import plot_training_curves
+from src.utils.reproducibility import set_global_seed
 
 
 @hydra.main(version_base=None, config_path="configs", config_name="train_config")
@@ -18,6 +19,8 @@ def main(cfg: DictConfig):
     schema = OmegaConf.structured(TrainConfig)
     cfg = OmegaConf.merge(schema, cfg)
     print(OmegaConf.to_yaml(cfg))
+
+    set_global_seed(cfg.seed)
 
     # LOAD DATA
     print("[INFO]: Cargando datos...")

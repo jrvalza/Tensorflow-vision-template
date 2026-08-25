@@ -74,6 +74,7 @@ class TrainingConfig:
 class TestConfig:
     """Configuration for model evaluation"""
 
+    seed: int
     dataset: DatasetConfig
     model_path: str
 
@@ -82,6 +83,7 @@ class TestConfig:
 class TrainConfig:
     """Configuration for model training"""
 
+    seed: int
     dataset: DatasetConfig
     model: ModelConfig
     training: TrainingConfig

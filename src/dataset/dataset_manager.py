@@ -7,8 +7,6 @@ from .loaders.image_dataset_from_directory import ImageDatasetFromDirectory
 from .preprocessing.augmentation_pipeline import AugmentationPipeline
 from .preprocessing.preprocessing_pipeline import PreprocessingPipeline
 
-AUTOTUNE = tf.data.AUTOTUNE
-
 
 class DatasetManager:
     """Loads and preprocesses datasets based on cfg.dataset.loader.name."""
@@ -82,8 +80,8 @@ class DatasetManager:
         if self._cfg_dataset.augmentation.enabled:
             train_ds = self._augmentation_pipeline.apply(train_ds)
 
-        train_ds = train_ds.prefetch(AUTOTUNE)
-        val_ds = val_ds.prefetch(AUTOTUNE)
-        test_ds = test_ds.prefetch(AUTOTUNE)
+        train_ds = train_ds.prefetch(tf.data.AUTOTUNE)
+        val_ds = val_ds.prefetch(tf.data.AUTOTUNE)
+        test_ds = test_ds.prefetch(tf.data.AUTOTUNE)
 
         return train_ds, val_ds, test_ds

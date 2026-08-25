@@ -1,5 +1,7 @@
+seed: 123
 defaults:
   - dataset: pnoa_multiclass
   - model: simple_classifier
   - training: default_multiclass_classifier
+  - _self_
   
