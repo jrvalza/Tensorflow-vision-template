@@ -1,7 +1,0 @@
-seed: 42
-model_path: "outputs/2026-08-04/15-08-52/checkpoints/best_model.keras"
-
-defaults:
-  - dataset: image_directory
-  - _self_
-  

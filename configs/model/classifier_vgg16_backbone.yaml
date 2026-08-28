@@ -1,6 +1,4 @@
-task: "classification"
-
-model_name: "CNN-with-VGG16-transfer-learning"
+model_name: "CNN_with_VGG16_transfer_learning"
 
 builder: "declarative_classification_model"
 blocks:

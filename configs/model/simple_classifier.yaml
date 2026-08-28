@@ -1,6 +1,4 @@
-task: "classification"
-
-model_name: "CNN-from-Scratch"
+model_name: "CNN_from_Scratch"
 
 builder: "declarative_classification_model"
 blocks:

@@ -1,0 +1,6 @@
+task: ${task}
+seed: ${global_seed}
+
+model_path: "outputs/2026-08-04/15-08-52/checkpoints/best_model.keras"
+#dataset: image_directory
+  

@@ -1,7 +1,10 @@
-seed: 123
+task: "classification"
+global_seed: 123
+
 defaults:
-  - dataset: pnoa_multiclass
+  - dataset: default_dataset
   - model: simple_classifier
-  - training: default_multiclass_classifier
+  - training: default_trainer
+  - evaluation: test_config
   - _self_
   
