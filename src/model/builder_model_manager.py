@@ -1,6 +1,6 @@
 import json
-from typing import Callable
 from omegaconf import DictConfig
+from collections.abc import Callable
 from tensorflow.keras.models import Model
 from .builders.deep_cnn import deep_cnn
 from .builders.declarative_models import declarative_classification_model

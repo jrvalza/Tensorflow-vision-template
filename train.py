@@ -20,7 +20,7 @@ def main(cfg: DictConfig):
     cfg = OmegaConf.merge(schema, cfg)
     print(OmegaConf.to_yaml(cfg))
 
-    set_global_seed(cfg.seed)
+    set_global_seed(cfg.global_seed)
 
     # LOAD DATA
     print("[INFO]: Cargando datos...")
@@ -46,7 +46,7 @@ def main(cfg: DictConfig):
     plot_training_curves(trainer.history)
 
     print("[INFO]: Evaluando el modelo...")
-    evaluator_manager = EvaluatorManager(cfg.model)
+    evaluator_manager = EvaluatorManager(cfg.evaluation)
     evaluator = evaluator_manager.build_evaluator()
     evaluator.evaluate(
         model,

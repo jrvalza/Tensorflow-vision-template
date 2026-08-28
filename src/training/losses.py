@@ -6,8 +6,8 @@ from tensorflow.keras.losses import (
 )
 
 LOSS_REGISTRY: dict[str, type[Loss]] = {
-    "categorical-crossentropy": CategoricalCrossentropy,
-    "sparse-categorical-crossentropy": SparseCategoricalCrossentropy,
+    "categorical_crossentropy": CategoricalCrossentropy,
+    "sparse_categorical_crossentropy": SparseCategoricalCrossentropy,
 }
 
 

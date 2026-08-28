@@ -1,4 +1,4 @@
-from typing import Callable
+from collections.abc import Callable
 import tensorflow as tf
 from tensorflow.keras.applications import VGG16
 from tensorflow.keras.layers import (

@@ -16,10 +16,10 @@ class AugmentationPipeline(BaseStepPipeline):
     """Applies the transforms configured in cfg.dataset.augmentation.transforms to a dataset."""
 
     LAYER_REGISTRY: dict[str, Callable[..., Layer]] = {
-        "random-flip": RandomFlip,
-        "random-rotation": RandomRotation,
-        "random-zoom": RandomZoom,
-        "random-translation": RandomTranslation,
+        "random_flip": RandomFlip,
+        "random_rotation": RandomRotation,
+        "random_zoom": RandomZoom,
+        "random_translation": RandomTranslation,
     }
 
     def __init__(self, cfg_dataset: DictConfig) -> None:

@@ -22,6 +22,7 @@ class BlockConfig:
 class PreprocessingConfig:
     """Configuration for the preprocessing pipeline"""
 
+    enabled: bool
     steps: list[ParamsConfig] = field(default_factory=list)
 
 
@@ -37,13 +38,18 @@ class AugmentationConfig:
 class DatasetConfig:
     """Configuration for dataset loading and preprocessing"""
 
+    task: str
+
     dataset_name: str
-    num_bands: int
+
+    root_dir: str
     train_dir: str
     test_dir: str
+    metadata_csv: str
+
+    num_bands: int
 
     loader: ParamsConfig
-
     preprocessing: PreprocessingConfig
     augmentation: AugmentationConfig
 
@@ -54,7 +60,6 @@ class ModelConfig:
 
     model_name: str
     builder: str
-    task: str
     blocks: list[BlockConfig] = field(default_factory=list)
 
 
@@ -74,16 +79,19 @@ class TrainingConfig:
 class TestConfig:
     """Configuration for model evaluation"""
 
+    task: str
     seed: int
-    dataset: DatasetConfig
     model_path: str
+    # dataset: DatasetConfig
 
 
 @dataclass
 class TrainConfig:
     """Configuration for model training"""
 
-    seed: int
+    task: str
+    global_seed: int
     dataset: DatasetConfig
     model: ModelConfig
     training: TrainingConfig
+    evaluation: TestConfig

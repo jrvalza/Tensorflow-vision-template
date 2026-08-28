@@ -11,7 +11,7 @@ class PreprocessingPipeline(BaseStepPipeline):
 
     def __init__(self, cfg_dataset: DictConfig) -> None:
         self._steps_registry: dict[str, Step] = {
-            "pixel-value-normalization": self._pixel_value_normalization
+            "pixel_value_normalization": self._pixel_value_normalization
         }
         super().__init__(cfg_dataset)
 

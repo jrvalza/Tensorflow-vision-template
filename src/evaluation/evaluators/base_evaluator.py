@@ -25,7 +25,7 @@ class BaseEvaluator(ABC):
         class_names: list[str],
         label_mode: str,
     ) -> None:
-        """Evaluate a trained model and persist metrics/plots according to cfg.model.task.
+        """Evaluate a trained model and persist metrics/plots according to cfg.task.
 
         Args:
             model: A trained Keras model to evaluate.
