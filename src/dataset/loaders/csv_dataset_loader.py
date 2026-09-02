@@ -1,10 +1,11 @@
+import numpy as np
 import pandas as pd
 import tensorflow as tf
 from sklearn.model_selection import train_test_split
 
 import rasterio
-from omegaconf import DictConfig
 from collections.abc import Callable
+from omegaconf import OmegaConf, DictConfig
 
 from .base_dataset_loader import BaseDatasetLoader
 
@@ -24,15 +25,25 @@ def _read_raster(path: str) -> tf.Tensor:
     return tf.transpose(tensor, [1, 2, 0])
 
 
-class CSVDatasetLoader(BaseDatasetLoader):
-    """Loads (image, label) or (image, mask) pairs listed in a single CSV metadata file.
+def _tf_py_function(full_path: str, dtype: tf.DType):
+    return tf.py_function(
+        lambda path: _read_raster(path.numpy().decode("utf-8")),
+        [full_path],
+        dtype,
+    )
 
-    The CSV has two columns: an image path and a label/mask path, both relative
-    to cfg_dataset.root_dir. Rows go to Train/Test by whether the image path
-    starts with "Train/" or "Test/"; a fraction of the Train rows is held out
-    for validation (cfg_dataset.loader.params.validation_split). Which strategy
-    reads the second column is selected by cfg_dataset.task.
+
+class CSVDatasetLoader(BaseDatasetLoader):
+    """Loads pairs of (image, label) or (image, mask) listed in a single CSV metadata file.
+
+    The CSV file must contain two columns: an image path and a label or mask path,
+    both relative to cfg_dataset.root_dir. Rows are assigned to training or test sets
+    based on whether the image path starts with "Train/" or "Test/"; a fraction of the
+    training rows is reserved for validation. The strategy used to read the second column
+    is determined by cfg_dataset.task.
     """
+
+    COLUMN_NAMES: list[str] = ["image_path", "target"]
 
     def __init__(self, cfg_dataset: DictConfig) -> None:
         super().__init__(cfg_dataset)
@@ -73,25 +84,28 @@ class CSVDatasetLoader(BaseDatasetLoader):
             sep=None,
             engine="python",
             header=0,
-            names=["image_path", "target"],
+            names=self.COLUMN_NAMES,
         )
 
-        train_rows = df[df["image_path"].str.startswith("Train/")]
-        test_rows = df[df["image_path"].str.startswith("Test/")]
+        df_train = df[df[self.COLUMN_NAMES[0]].str.startswith("Train/")]
+        df_test = df[df[self.COLUMN_NAMES[0]].str.startswith("Test/")]
 
-        if train_rows.empty or test_rows.empty:
+        if df_train.empty or df_test.empty:
             raise ValueError(
                 "The 'metadata_csv' file must contain rows with the prefix 'Train/' and 'Test/'."
             )
 
-        train_rows, val_rows = train_test_split(
-            train_rows,
+        df_train, df_val = train_test_split(
+            df_train,
             test_size=self._cfg_dataset.loader.params.validation_split,
             random_state=self._cfg_dataset.loader.params.seed,
         )
-        return train_rows, val_rows, test_rows
 
-    def _resolve_classes(self, train_rows: pd.DataFrame) -> None:
+        message = f"Found {len(df_train)+len(df_val)} files belonging to {self._num_classes} classes. \n Using {len(df_train)} files for training and {len(df_val)} files for validation ({self._cfg_dataset.loader.params.validation_split*100}% of Train dataset).\nFound {len(df_test)} files belonging to {self._num_classes} classes. \n Using {len(df_test)} files for test."
+        print(message)
+        return df_train, df_val, df_test
+
+    def _resolve_classes(self, df_train: pd.DataFrame) -> None:
         """Resolve class names and indices for the configured task.
 
         For classification, class names are inferred from the training targets
@@ -100,12 +114,20 @@ class CSVDatasetLoader(BaseDatasetLoader):
         'num_classes'.
 
         Args:
-            train_rows: DataFrame containing the training targets.
+            df_train: DataFrame containing the training targets.
         """
         if self._cfg_dataset.task == "classification":
-            self._class_names = sorted(
-                train_rows["target"].unique().tolist()
-            )  #######################convertir a str?
+
+            df_train[self.COLUMN_NAMES[1]] = df_train[self.COLUMN_NAMES[1]].apply(
+                lambda target: (
+                    str(target)
+                    if self._cfg_dataset.loader.params.label_mode == "categorical"
+                    else int(target)
+                )
+            )
+
+            self._class_names = sorted(df_train[self.COLUMN_NAMES[1]].unique().tolist())
+
             self._label_table = tf.lookup.StaticHashTable(
                 tf.lookup.KeyValueTensorInitializer(
                     tf.constant(self._class_names), tf.range(len(self._class_names))
@@ -114,10 +136,16 @@ class CSVDatasetLoader(BaseDatasetLoader):
             )
 
         if self._cfg_dataset.task == "segmentation":
-            self._class_names = (
-                list(self._cfg_dataset.class_names)
-                if self._cfg_dataset.class_names is not None
-                else [str(i) for i in range(self._cfg_dataset.num_classes)]
+            if self._cfg_dataset.class_names is None:
+                raise ValueError(
+                    "The class names must be specified as a dictionary under the 'dataset.class_names' key.\n"
+                    f"Currently the value of class_names is: {self._cfg_dataset.class_names}"
+                )
+
+            self._class_names = list(
+                OmegaConf.to_container(
+                    self._cfg_dataset.class_names, resolve=True
+                ).values()
             )
 
         self._num_classes = len(self._class_names)
@@ -136,6 +164,7 @@ class CSVDatasetLoader(BaseDatasetLoader):
             A tensor containing either integer class indices or one-hot encoded
             class labels.
         """
+        target = tf.cast(target, self._label_table.key_dtype)
         index = self._label_table.lookup(target)
 
         if self._cfg_dataset.loader.params.label_mode == "categorical":
@@ -143,20 +172,18 @@ class CSVDatasetLoader(BaseDatasetLoader):
         return index
 
     def _load_segmentation_mask(self, target: tf.Tensor) -> tf.Tensor:
-        """Load a segmentation mask raster from the target path.
+        """Loads a segmentation mask raster from the target path.
         Each pixel stores an integer class index.
 
         Args:
-            target: Tensor containing the target path.
+            target: Tensor containing the path to the mask image
 
         Returns:
-            A uint8 tensor containing the per-pixel class indices.
+            A tensor containing the per-pixel class indices with shape (H, W, 1)
         """
-        mask_path = tf.strings.join([self._cfg_dataset.root_dir, "/", target])
-        mask = tf.py_function(
-            lambda path: _read_raster(path.numpy().decode("utf-8")),
-            [mask_path],
-            tf.uint8,
+        mask_full_path = tf.strings.join([self._cfg_dataset.root_dir, "/", target])
+        mask = _tf_py_function(
+            full_path=mask_full_path, dtype=tf.as_dtype(self._cfg_dataset.image_dtype)
         )
         mask.set_shape([None, None, 1])
         return mask
@@ -173,11 +200,9 @@ class CSVDatasetLoader(BaseDatasetLoader):
         Returns:
             A tuple of tensors containing the loaded image and its corresponding label.
         """
-        full_path = tf.strings.join([self._cfg_dataset.root_dir, "/", image_path])
-        image = tf.py_function(
-            lambda path: _read_raster(path.numpy().decode("utf-8")),
-            [full_path],
-            tf.uint8,
+        image_full_path = tf.strings.join([self._cfg_dataset.root_dir, "/", image_path])
+        image = _tf_py_function(
+            full_path=image_full_path, dtype=tf.as_dtype(self._cfg_dataset.image_dtype)
         )
         image.set_shape([None, None, self._cfg_dataset.num_bands])
         label = self._label_loaders[self._cfg_dataset.task](target)
@@ -193,7 +218,7 @@ class CSVDatasetLoader(BaseDatasetLoader):
             A batched TensorFlow dataset containing images and their targets.
         """
         dataset = tf.data.Dataset.from_tensor_slices(
-            (df["image_path"].tolist(), df["target"].tolist())
+            (df[self.COLUMN_NAMES[0]].to_numpy(), df[self.COLUMN_NAMES[1]].to_numpy())
         )
 
         if training and self._cfg_dataset.loader.params.shuffle:

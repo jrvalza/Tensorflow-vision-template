@@ -12,12 +12,13 @@ class BaseStepPipeline(ABC):
     """Base class for pipelines that apply a configured sequence of (image, label) steps."""
 
     def __init__(self, cfg_dataset: DictConfig) -> None:
+        self._cfg_dataset = cfg_dataset
         self._steps: list[Step] = [
-            self._resolve_entry(entry) for entry in self._config_entries(cfg_dataset)
+            self._resolve_entry(entry) for entry in self._config_entries()
         ]
 
     @abstractmethod
-    def _config_entries(self, cfg_dataset: DictConfig) -> list[DictConfig]:
+    def _config_entries(self) -> list[DictConfig]:
         """Return this pipeline's list of {name, params} entries from cfg_dataset."""
 
     @abstractmethod

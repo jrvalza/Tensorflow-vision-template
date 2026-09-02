@@ -25,8 +25,8 @@ class AugmentationPipeline(BaseStepPipeline):
     def __init__(self, cfg_dataset: DictConfig) -> None:
         super().__init__(cfg_dataset)
 
-    def _config_entries(self, cfg_dataset: DictConfig) -> list[DictConfig]:
-        return cfg_dataset.augmentation.transforms
+    def _config_entries(self) -> list[DictConfig]:
+        return self._cfg_dataset.augmentation.transforms
 
     def _resolve_entry(self, entry: DictConfig) -> Step:
         """

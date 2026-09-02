@@ -48,10 +48,12 @@ class DatasetConfig:
     metadata_csv: str
 
     num_bands: int
+    image_dtype: str
 
     loader: ParamsConfig
     preprocessing: PreprocessingConfig
     augmentation: AugmentationConfig
+    class_names: dict[int, str] | None = None
 
 
 @dataclass

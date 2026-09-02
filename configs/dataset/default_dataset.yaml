@@ -2,12 +2,23 @@ task: ${task}
 
 dataset_name: "PNOA_ortoimagenes"
 
+#=========== Only for segmentation task============
+class_names:
+  0: Construction
+  1: Bare_ground
+  2: Road
+  3: Vegetation
+  4: Water
+  5: Other
+#==================================================
+
 root_dir: "raw_data/classification/multiclass"
 train_dir: "${dataset.root_dir}/Train"
 test_dir: "${dataset.root_dir}/Test"
 metadata_csv: "${dataset.root_dir}/metadata.csv"
 
 num_bands: 4
+image_dtype: "uint8"
 
 loader: 
   name: "from_local_directory"
@@ -24,7 +35,11 @@ preprocessing:
   steps:
     - name: "pixel_value_normalization"
       params:
-        value: 255.0
+        dtype: ${dataset.image_dtype}
+
+    - name: "resize_image"
+      params:
+        image_size: ${dataset.loader.params.image_size}
 
 augmentation:
   enabled: true

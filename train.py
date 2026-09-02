@@ -18,7 +18,7 @@ def main(cfg: DictConfig):
 
     schema = OmegaConf.structured(TrainConfig)
     cfg = OmegaConf.merge(schema, cfg)
-    print(OmegaConf.to_yaml(cfg))
+    print(OmegaConf.to_yaml(cfg, resolve=True))
 
     set_global_seed(cfg.global_seed)
 
