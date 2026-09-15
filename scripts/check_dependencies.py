@@ -6,6 +6,7 @@ import matplotlib
 import numpy as np
 import pandas as pd
 import tensorflow as tf
+import pydantic
 
 print("GPUS: ", tf.config.list_physical_devices("GPU"))
 print("GPUS: ", tf.config.list_physical_devices("GPU").__len__() > 0)
@@ -18,3 +19,4 @@ print("matplotlib version: ", matplotlib.__version__)
 print("Numpy version: ", np.__version__)
 print("Pandas version: ", pd.__version__)
 print("Tensorflow version: ", tf.__version__)
+print("Pydantic version: ", pydantic.__version__)

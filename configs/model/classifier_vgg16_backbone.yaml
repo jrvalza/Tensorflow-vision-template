@@ -1,6 +1,6 @@
 model_name: "CNN_with_VGG16_transfer_learning"
 
-builder: "declarative_classification_model"
+builder_name: "declarative_classification_model"
 blocks:
 
   - type: vgg16_backbone

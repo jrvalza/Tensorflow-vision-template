@@ -1,6 +1,6 @@
 model_name: "CNN_from_Scratch"
 
-builder: "declarative_classification_model"
+builder_name: "declarative_classification_model"
 blocks:
 
   - type: conv2d

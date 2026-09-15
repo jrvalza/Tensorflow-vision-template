@@ -22,5 +22,6 @@ callbacks:
     params:
       monitor: val_accuracy
       save_best_only: true
+      filepath: ${checkpoint_path:}
 
 verbose: 1

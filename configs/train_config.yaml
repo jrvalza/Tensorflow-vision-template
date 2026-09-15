@@ -1,10 +1,10 @@
 task: "classification"
 global_seed: 123
+reproducibility: true
 
 defaults:
   - dataset: default_dataset
   - model: simple_classifier
   - training: default_trainer
-  - evaluation: test_config
   - _self_
   
