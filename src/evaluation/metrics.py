@@ -1,5 +1,7 @@
-from typing import Any
 import numpy as np
+from typing import Any
+
+
 from sklearn.metrics import (
     accuracy_score,
     balanced_accuracy_score,
@@ -9,39 +11,93 @@ from sklearn.metrics import (
 )
 
 
-def classification_report_dict(
-    y_true: np.ndarray, y_pred: np.ndarray, class_names: list[str]
-) -> dict[str, Any]:
-    """Return the classification report as a dictionary"""
-    return classification_report(
-        y_true, y_pred, target_names=class_names, output_dict=True, zero_division=0
-    )
+class Metrics:
+    """Provides metric computations for model evaluation."""
 
+    def compute_confusion_matrix(
+        self, y_true: np.ndarray, y_pred: np.ndarray
+    ) -> np.ndarray:
+        """Compute the confusion matrix.
 
-def classification_report_text(
-    y_true: np.ndarray, y_pred: np.ndarray, class_names: list[str]
-) -> str:
-    """Return the classification report as formatted text"""
-    return classification_report(
-        y_true, y_pred, target_names=class_names, output_dict=False, zero_division=0
-    )
+        Args:
+            y_true: Ground-truth class indices, shape (N,).
+            y_pred: Predicted class indices, shape (N,).
 
+        Returns:
+            Confusion matrix of shape (num_classes, num_classes), rows as
+            true labels and columns as predicted labels.
+        """
+        return confusion_matrix(y_true, y_pred)
 
-def compute_confusion_matrix(y_true: np.ndarray, y_pred: np.ndarray) -> np.ndarray:
-    """Compute the confusion matrix"""
-    return confusion_matrix(y_true, y_pred)
+    def compute_accuracy(self, y_true: np.ndarray, y_pred: np.ndarray) -> float:
+        """Compute the overall classification accuracy.
 
+        Args:
+            y_true: Ground-truth class indices, shape (N,).
+            y_pred: Predicted class indices, shape (N,).
 
-def compute_accuracy(y_true: np.ndarray, y_pred: np.ndarray) -> float:
-    """Compute the overall accuracy"""
-    return round(accuracy_score(y_true, y_pred), 4)
+        Returns:
+            Overall classification accuracy.
+        """
+        return round(accuracy_score(y_true, y_pred), 4)
 
+    def compute_balanced_accuracy(
+        self, y_true: np.ndarray, y_pred: np.ndarray
+    ) -> float:
+        """Compute the balanced classification accuracy.
 
-def compute_balanced_accuracy(y_true: np.ndarray, y_pred: np.ndarray) -> float:
-    """Compute the balanced accuracy"""
-    return round(balanced_accuracy_score(y_true, y_pred), 4)
+        Args:
+            y_true: Ground-truth class indices, shape (N,).
+            y_pred: Predicted class indices, shape (N,).
 
+        Returns:
+            Balanced classification accuracy.
+        """
+        return round(balanced_accuracy_score(y_true, y_pred), 4)
 
-def compute_cohen_kappa(y_true: np.ndarray, y_pred: np.ndarray) -> float:
-    """Compute Cohen's kappa coefficient"""
-    return round(cohen_kappa_score(y_true, y_pred), 4)
+    def compute_cohen_kappa(self, y_true: np.ndarray, y_pred: np.ndarray) -> float:
+        """Compute Cohen's kappa coefficient.
+
+        Args:
+            y_true: Ground-truth class indices, shape (N,).
+            y_pred: Predicted class indices, shape (N,).
+
+        Returns:
+            Cohen's kappa coefficient.
+        """
+        return round(cohen_kappa_score(y_true, y_pred), 4)
+
+    def classification_report_text(
+        self, y_true: np.ndarray, y_pred: np.ndarray, class_names: list[str]
+    ) -> str:
+        """Return the classification report as formatted text.
+
+        Args:
+            y_true: Ground-truth class indices, shape (N,).
+            y_pred: Predicted class indices, shape (N,).
+            class_names: Names of the target classes.
+
+        Returns:
+            Classification report formatted as a string.
+        """
+        return classification_report(
+            y_true, y_pred, target_names=class_names, output_dict=False, zero_division=0
+        )
+
+    def classification_report_dict(
+        self, y_true: np.ndarray, y_pred: np.ndarray, class_names: list[str]
+    ) -> dict[str, Any]:
+        """Return the classification report as a dictionary.
+
+        Args:
+            y_true: Ground-truth class indices, shape (N,).
+            y_pred: Predicted class indices, shape (N,).
+            class_names: Names of the target classes.
+
+        Returns:
+            Classification report containing precision, recall, F1-score,
+            and support for each class.
+        """
+        return classification_report(
+            y_true, y_pred, target_names=class_names, output_dict=True, zero_division=0
+        )

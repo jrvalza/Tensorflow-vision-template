@@ -1,29 +1,41 @@
+import tensorflow as tf
 from abc import ABC, abstractmethod
 
-import tensorflow as tf
-from omegaconf import DictConfig
+from src.config.schemes.dataset_scheme import DatasetConfig
 
 
 class BaseDatasetLoader(ABC):
-    """Base interface for dataset loaders."""
+    """Abstract base class for dataset loaders.
 
-    def __init__(self, cfg_dataset: DictConfig) -> None:
+    Defines the interface that concrete dataset loaders must implement to
+    provide dataset metadata and load the training, validation, and test
+    splits.
+    """
+
+    def __init__(self, cfg_dataset: DatasetConfig) -> None:
+        """Initialize the dataset loader.
+        Args:
+            cfg_dataset: Dataset configuration used by the concrete loader.
+        """
         self._cfg_dataset = cfg_dataset
 
     @property
     @abstractmethod
     def num_classes(self) -> int | None:
-        """Number of classes in the dataset, or None if not loaded yet."""
+        """Return the number of classes in the dataset, if available."""
+        ...
 
     @property
     @abstractmethod
     def class_names(self) -> list[str] | None:
-        """Dataset class names, or None if not loaded yet."""
+        """Return the dataset class names, if available."""
+        ...
 
     @abstractmethod
     def load_data(self) -> tuple[tf.data.Dataset, tf.data.Dataset, tf.data.Dataset]:
-        """Load the training, validation and test datasets.
+        """Load the training, validation, and test datasets.
 
         Returns:
-            (train_ds, val_ds, test_ds).
+            A tuple containing the training, validation, and test datasets.
         """
+        ...

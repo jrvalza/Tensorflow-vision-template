@@ -1,30 +1,65 @@
+"""Entry point for the end-to-end model training pipeline.
+
+Composes the Hydra config, validates it with Pydantic against the
+registered components, and runs load → build → train → evaluate.
+"""
+
 import json
 import hydra
 from omegaconf import DictConfig, OmegaConf
 
-from src.training.trainer import Trainer
-from src.dataset.dataset_manager import DatasetManager
-from src.evaluation.evaluator_manager import EvaluatorManager
-from src.model.builder_model_manager import BuilderModelManager
+from src.config.registry import (
+    ConfigRegistries,
+    DATASET_REGISTRIES,
+    MODEL_REGISTRIES,
+    TRAINING_REGISTRIES,
+    EVALUATOR_REGISTRIES,
+)
+from src.config.scheme import TrainConfig
+from src.config.params_resolver import params_resolvers
 
-from src.utils.dataclasses import TrainConfig
 from src.utils.paths import get_checkpoint_dir
-from src.evaluation.plots import plot_training_curves
-from src.utils.reproducibility import set_global_seed
+from src.utils.reproducibility import set_reproducibility
+
+from src.model.model_manager import ModelManager
+from src.dataset.dataset_manager import DatasetManager
+from src.training.training_manager import TrainingManager
+from src.evaluation.evaluator_manager import EvaluatorManager
 
 
 @hydra.main(version_base=None, config_path="configs", config_name="train_config")
-def main(cfg: DictConfig):
+def main(cfg: DictConfig) -> None:
+    """Run the end-to-end training pipeline: validate config, load data,
+    build the model, train it and evaluate it on the test split.
 
-    schema = OmegaConf.structured(TrainConfig)
-    cfg = OmegaConf.merge(schema, cfg)
-    print(OmegaConf.to_yaml(cfg, resolve=True))
+    Args:
+        cfg: Hydra-composed configuration, validated against
+            src.config.scheme.TrainConfig before use.
+    """
 
-    set_global_seed(cfg.global_seed)
+    params_resolvers()
+    print(json.dumps(OmegaConf.to_container(cfg, resolve=True), indent=4))
+
+    # CONFIGURATION VALIDATION WITH PYDANTIC
+    config_registries = ConfigRegistries(
+        dataset=DATASET_REGISTRIES,
+        model=MODEL_REGISTRIES,
+        training=TRAINING_REGISTRIES,
+        evaluator=EVALUATOR_REGISTRIES,
+    )
+
+    cfg_validated = TrainConfig.model_validate(
+        OmegaConf.to_container(cfg, resolve=True, throw_on_missing=True),
+        context={"registries": config_registries},
+    )
+
+    # FIXING REPRODUCIBILITY
+    set_reproducibility(cfg_validated.global_seed, cfg_validated.reproducibility)
 
     # LOAD DATA
     print("[INFO]: Cargando datos...")
-    data_manager = DatasetManager(cfg.dataset)
+    data_manager = DatasetManager(cfg_validated.dataset, DATASET_REGISTRIES)
+
     train_ds, val_ds, test_ds = data_manager.load_data()
 
     class_names_path = str(get_checkpoint_dir() / "class_names.json")
@@ -33,26 +68,26 @@ def main(cfg: DictConfig):
 
     # TRAIN
     print("[INFO]: Creando el modelo...")
-    model_manager = BuilderModelManager(cfg.model)
-    image_size = tuple(cfg.dataset.loader.params.image_size)
-    input_shape = (*image_size, cfg.dataset.num_bands)
+    model_manager = ModelManager(cfg_validated.model, MODEL_REGISTRIES)
+    image_size = tuple(cfg_validated.dataset.loader.params.image_size)
+    input_shape = (*image_size, cfg_validated.dataset.num_bands)
     model = model_manager.build(
         input_shape=input_shape, num_classes=data_manager.num_classes
     )
 
     print("[INFO]: Entrenando el modelo...")
-    trainer = Trainer(cfg.training, model, train_ds, val_ds)
+    trainer = TrainingManager(
+        cfg_validated.training, model, train_ds, val_ds, TRAINING_REGISTRIES
+    )
     model = trainer.train()
-    plot_training_curves(trainer.history)
 
     print("[INFO]: Evaluando el modelo...")
-    evaluator_manager = EvaluatorManager(cfg.evaluation)
-    evaluator = evaluator_manager.build_evaluator()
-    evaluator.evaluate(
+    evaluator_manager = EvaluatorManager(cfg_validated.task, EVALUATOR_REGISTRIES)
+    evaluator_manager.evaluate(
         model,
         test_ds,
         class_names=data_manager.class_names,
-        label_mode=cfg.dataset.loader.params.label_mode,
+        label_mode=cfg_validated.dataset.loader.params.label_mode,
     )
 
     print("[INFO]: Fin.")

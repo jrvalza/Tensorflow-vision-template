@@ -1,88 +1,101 @@
-import json
 import tensorflow as tf
-from omegaconf import DictConfig
 
-from .loaders.base_dataset_loader import BaseDatasetLoader
-from .loaders.csv_dataset_loader import CSVDatasetLoader
-from .loaders.image_dataset_from_directory import ImageDatasetFromDirectory
+from src.utils.paths import get_cache_dir
+from src.config.registry import DatasetRegistries
+from src.config.schemes.dataset_scheme import DatasetConfig
 from .preprocessing.augmentation_pipeline import AugmentationPipeline
 from .preprocessing.preprocessing_pipeline import PreprocessingPipeline
 
 
 class DatasetManager:
-    """Loads and preprocesses datasets based on cfg.dataset.loader.name."""
+    """Loads, preprocesses, augments, and caches the configured datasets.
 
-    LOADER_REGISTRY: dict[str, type[BaseDatasetLoader]] = {
-        "from_local_directory": ImageDatasetFromDirectory,
-        "from_csv_metadata": CSVDatasetLoader,
-    }
+    The dataset loader, preprocessing pipeline, and augmentation pipeline
+    are selected from the provided registries and configured through the
+    dataset configuration.
+    """
 
-    def __init__(self, cfg_dataset: DictConfig) -> None:
+    def __init__(
+        self,
+        cfg_dataset: DatasetConfig,
+        dataset_registries: DatasetRegistries,
+    ) -> None:
+        """Initialize the dataset manager.
+
+        Args:
+            cfg_dataset: Dataset configuration containing the loader,
+                preprocessing, augmentation, and related settings.
+            dataset_registries: Registries of available dataset loaders,
+                preprocessing steps, and augmentation steps, injected as
+                a single dependency.
+        """
+
         self._cfg_dataset = cfg_dataset
-        self._loader: BaseDatasetLoader | None = None
-        self._preprocess_pipeline = PreprocessingPipeline(cfg_dataset)
-        self._augmentation_pipeline = AugmentationPipeline(cfg_dataset)
+        self._loader = dataset_registries.loaders[self._cfg_dataset.loader.name](
+            self._cfg_dataset
+        )
+        self._preprocess_pipeline = PreprocessingPipeline(
+            self._cfg_dataset, dataset_registries.preprocessing_steps
+        )
+        self._augmentation_pipeline = AugmentationPipeline(
+            self._cfg_dataset, dataset_registries.augmentation_steps
+        )
 
-    def __str__(self) -> str:
-        """List the available dataset loaders."""
-        loaders = {
-            loader_type: loader_cls.__name__
-            for loader_type, loader_cls in self.LOADER_REGISTRY.items()
-        }
-        return f"Available dataset loaders:\n{json.dumps(loaders, indent=4)}"
+    def __repr__(self) -> str:
+        return (
+            f"DatasetManager(loader={self._cfg_dataset.loader.name}, "
+            f"preprocessing={self._cfg_dataset.preprocessing.enabled}, "
+            f"augmentation={self._cfg_dataset.augmentation.enabled})"
+        )
 
     @property
-    def num_classes(self) -> int:
-        """Number of classes in the loaded dataset.
-
-        Raises:
-            RuntimeError: If load_data() hasn't been called yet.
-        """
-        if self._loader is None:
-            raise RuntimeError("Dataset has not been loaded.")
+    def num_classes(self) -> int | None:
+        """Return the number of classes in the dataset, if available."""
         return self._loader.num_classes
 
     @property
-    def class_names(self) -> list[str]:
-        """Class names of the loaded dataset, in the loader's order.
-
-        Raises:
-            RuntimeError: If load_data() hasn't been called yet.
-        """
-        if self._loader is None:
-            raise RuntimeError("Dataset has not been loaded.")
+    def class_names(self) -> list[str] | None:
+        """Return the dataset class names, if available."""
         return self._loader.class_names
 
     def load_data(self) -> tuple[tf.data.Dataset, tf.data.Dataset, tf.data.Dataset]:
-        """Load train/val/test datasets and apply the preprocessing pipeline.
+        """Load and prepare the train, validation, and test datasets.
+
+        The datasets are loaded using the configured loader, optionally
+        preprocessed and augmented according to the configuration, cached
+        on disk, and prefetched using 'tf.data.AUTOTUNE'. Data
+        augmentation is applied only to the training dataset.
 
         Returns:
-            (train_ds, val_ds, test_ds), batched, preprocessed and prefetched.
-
-        Raises:
-            ValueError: If cfg.dataset.loader.name is not registered.
+            A tuple containing the training, validation, and test datasets.
         """
-        try:
-            loader_cls = self.LOADER_REGISTRY[self._cfg_dataset.loader.name]
-        except KeyError as e:
-            raise ValueError(
-                f"Unknown dataset loader: {self._cfg_dataset.loader.name}"
-            ) from e
-
-        self._loader = loader_cls(self._cfg_dataset)
-
         train_ds, val_ds, test_ds = self._loader.load_data()
 
-        # preprocessing
+        # --------------------------------------------------
+        # Preprocessing
+        # --------------------------------------------------
         if self._cfg_dataset.preprocessing.enabled:
             train_ds = self._preprocess_pipeline.apply(train_ds)
             val_ds = self._preprocess_pipeline.apply(val_ds)
             test_ds = self._preprocess_pipeline.apply(test_ds)
 
-        # augmentation
+        # --------------------------------------------------
+        # Cache preprocessed datasets
+        # --------------------------------------------------
+        cache_dir = get_cache_dir()
+        train_ds = train_ds.cache(str(cache_dir / "train"))
+        val_ds = val_ds.cache(str(cache_dir / "val"))
+        test_ds = test_ds.cache(str(cache_dir / "test"))
+
+        # --------------------------------------------------
+        # Data augmentation
+        # --------------------------------------------------
         if self._cfg_dataset.augmentation.enabled:
             train_ds = self._augmentation_pipeline.apply(train_ds)
 
+        # --------------------------------------------------
+        # Prefetch
+        # --------------------------------------------------
         train_ds = train_ds.prefetch(tf.data.AUTOTUNE)
         val_ds = val_ds.prefetch(tf.data.AUTOTUNE)
         test_ds = test_ds.prefetch(tf.data.AUTOTUNE)

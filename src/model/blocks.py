@@ -1,6 +1,5 @@
 from collections.abc import Callable
 import tensorflow as tf
-from tensorflow.keras.applications import VGG16
 from tensorflow.keras.layers import (
     Dense,
     Conv2D,
@@ -12,8 +11,9 @@ from tensorflow.keras.layers import (
     BatchNormalization,
     Layer,
 )
+from tensorflow.keras.applications import VGG16
 
-POOLING_REGISTRY: dict[str, Callable[..., Layer]] = {
+MODEL_POOLING_LAYERS_REGISTRY: dict[str, Callable[..., Layer]] = {
     "max2d": MaxPooling2D,
     "avg2d": AveragePooling2D,
 }
@@ -49,7 +49,7 @@ def conv2d(
         x = BatchNormalization()(x)
     if pooling:
         try:
-            pooling_fn = POOLING_REGISTRY[pooling]
+            pooling_fn = MODEL_POOLING_LAYERS_REGISTRY[pooling]
         except KeyError as e:
             raise ValueError(f"Unknown Pooling layer: {pooling}") from e
 
@@ -125,10 +125,3 @@ def vgg16_backbone(
             for trainable_block in trainable_blocks
         )
     return base_model(x)
-
-
-BLOCKS_REGISTRY: dict[str, Callable[..., tf.Tensor]] = {
-    "conv2d": conv2d,
-    "dense_head": dense_head,
-    "vgg16_backbone": vgg16_backbone,
-}

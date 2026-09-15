@@ -21,3 +21,8 @@ def get_checkpoint_dir() -> Path:
 def get_evaluation_dir() -> Path:
     """Return the evaluation directory, creating it if necessary"""
     return create_directory(get_output_dir() / "evaluation")
+
+
+def get_cache_dir() -> Path:
+    """Return the cache directory, creating it if necessary"""
+    return create_directory(get_output_dir() / "dataset_cache")

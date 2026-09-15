@@ -1,39 +1,46 @@
-import json
-from omegaconf import DictConfig
+import tensorflow as tf
+from tensorflow.keras.models import Model
 
-from src.evaluation.evaluators.base_evaluator import BaseEvaluator
-from src.evaluation.evaluators.classification_evaluator import ClassificationEvaluator
+from src.evaluation.metrics import Metrics
+from src.evaluation.plotter import Plotter
+from src.config.registry import EvaluatorRegistries
 
 
 class EvaluatorManager:
-    """Builds a task-specific evaluator based on cfg.task."""
+    """Selects and invokes the evaluator configured for a specific task."""
 
-    TASK_EVALUATOR_REGISTRY: dict[str, type[BaseEvaluator]] = {
-        "classification": ClassificationEvaluator
-    }
+    def __init__(self, task: str, evaluator_registries: EvaluatorRegistries) -> None:
+        """Initialize the evaluator manager.
 
-    def __init__(self, cfg_evaluation: DictConfig) -> None:
-        self._cfg_evaluation = cfg_evaluation
-
-    def __str__(self) -> str:
-        """List the available evaluators."""
-        evaluators = {
-            evaluator_type: evaluator_cls.__name__
-            for evaluator_type, evaluator_cls in self.TASK_EVALUATOR_REGISTRY.items()
-        }
-        return f"Available evaluators:\n{json.dumps(evaluators, indent=4)}"
-
-    def build_evaluator(self) -> BaseEvaluator:
-        """Build the evaluator for the task configured in cfg.task.
-
-        Returns:
-            An evaluator instance for the configured task.
-
-        Raises:
-            ValueError: If cfg.task is not registered.
+        Args:
+            task: Computer vision task used to select the corresponding evaluator
+                from the registry.
+            evaluator_registries: Registry containing the evaluators available for
+                each supported task.
         """
-        try:
-            evaluator_cls = self.TASK_EVALUATOR_REGISTRY[self._cfg_evaluation.task]
-        except KeyError as e:
-            raise ValueError(f"Unknown task: {self._cfg_evaluation.task}") from e
-        return evaluator_cls()
+        self._evaluator_cls = evaluator_registries.task_evaluators[task]
+
+    def evaluate(
+        self,
+        model: Model,
+        test_ds: tf.data.Dataset,
+        class_names: list[str],
+        label_mode: str,
+    ) -> None:
+        """Evaluate a trained model using the task-specific evaluator.
+
+        Args:
+            model: Trained Keras model to evaluate.
+            test_ds: Batched test dataset used for evaluation.
+            class_names: Class names, in the order used by the model's output.
+            label_mode: Label encoding used by the dataset, e.g. 'categorical', 'binary', or 'int'.
+        """
+        evaluator = self._evaluator_cls(
+            model=model,
+            test_ds=test_ds,
+            class_names=class_names,
+            label_mode=label_mode,
+            metrics=Metrics(),
+            plotter=Plotter(),
+        )
+        evaluator.evaluate()

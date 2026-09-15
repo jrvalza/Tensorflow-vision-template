@@ -1,23 +1,25 @@
-import numpy as np
+import rasterio
 import pandas as pd
 import tensorflow as tf
+from collections.abc import Callable
 from sklearn.model_selection import train_test_split
 
-import rasterio
-from collections.abc import Callable
-from omegaconf import OmegaConf, DictConfig
-
 from .base_dataset_loader import BaseDatasetLoader
+from src.config.schemes.dataset_scheme import DatasetConfig
 
 
 def _read_raster(path: str) -> tf.Tensor:
-    """Read a raster file and return it as an (H, W, bands)tensor.
+    """Read a raster file into a TensorFlow tensor.
+
+    Rasterio returns raster data with shape (bands, H, W). The resulting
+    tensor is transposed to (H, W, bands) to match TensorFlow's expected
+    image layout.
 
     Args:
         path: Path to the raster file.
 
     Returns:
-        A tensor containing the raster data with shape (H, W, bands).
+        Tensor containing the raster data with shape (H, W, bands).
     """
     with rasterio.open(path) as src:
         array = src.read()
@@ -25,7 +27,20 @@ def _read_raster(path: str) -> tf.Tensor:
     return tf.transpose(tensor, [1, 2, 0])
 
 
-def _tf_py_function(full_path: str, dtype: tf.DType):
+def _tf_py_function(full_path: tf.Tensor, dtype: tf.DType) -> tf.Tensor:
+    """Read a raster file using TensorFlow's Python callback mechanism.
+
+    This function wraps the Rasterio-based raster reader with
+    'tf.py_function' so that raster files can be loaded inside a
+    'tf.data' pipeline.
+
+    Args:
+        full_path: Tensor containing the path to the raster file.
+        dtype: TensorFlow dtype of the returned tensor.
+
+    Returns:
+        Tensor containing the raster data.
+    """
     return tf.py_function(
         lambda path: _read_raster(path.numpy().decode("utf-8")),
         [full_path],
@@ -34,50 +49,57 @@ def _tf_py_function(full_path: str, dtype: tf.DType):
 
 
 class CSVDatasetLoader(BaseDatasetLoader):
-    """Loads pairs of (image, label) or (image, mask) listed in a single CSV metadata file.
+    """Loads image-target pairs from a CSV metadata file.
 
-    The CSV file must contain two columns: an image path and a label or mask path,
-    both relative to cfg_dataset.root_dir. Rows are assigned to training or test sets
-    based on whether the image path starts with "Train/" or "Test/"; a fraction of the
-    training rows is reserved for validation. The strategy used to read the second column
-    is determined by cfg_dataset.task.
+    The CSV file must contain an image path and a corresponding label or mask
+    path for each sample. Training and test samples are identified by the
+    'Train/' and 'Test/' path prefixes, respectively. The training samples
+    are further split into training and validation subsets.
     """
 
     COLUMN_NAMES: list[str] = ["image_path", "target"]
 
-    def __init__(self, cfg_dataset: DictConfig) -> None:
+    def __init__(self, cfg_dataset: DatasetConfig) -> None:
+        """Initialize the CSV dataset loader.
+
+        Args:
+            cfg_dataset: Dataset configuration containing the CSV metadata path,
+                dataset root directory, task, image properties, and loader
+                parameters.
+        """
         super().__init__(cfg_dataset)
         self._num_classes: int | None = None
         self._class_names: list[str] | None = None
         self._label_table: tf.lookup.StaticHashTable | None = None
-        self._label_loaders: dict[str, Callable] = {
+        self._label_loaders: dict[str, Callable[[tf.Tensor], tf.Tensor]] = {
             "classification": self._load_classification_label,
             "segmentation": self._load_segmentation_mask,
         }
 
-    def __str__(self) -> str:
-        """Return the loader class name."""
-        return self.__class__.__name__
-
     @property
     def num_classes(self) -> int | None:
-        """Number of classes, set after load_data() runs; None before that."""
+        """Return the number of classes, if the dataset has been loaded."""
         return self._num_classes
 
     @property
     def class_names(self) -> list[str] | None:
-        """Class names; None until load_data() runs."""
+        """Return the dataset class names, if the dataset has been loaded."""
         return self._class_names
 
     def _split_dataframe(self) -> tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame]:
-        """Read the CSV file and split rows into train, validation and test sets.
+        """Read the metadata CSV and split samples into train, validation, and test sets.
+
+        Training and test samples are identified by the 'Train/' and 'Test/'
+        prefixes in the image paths. The training samples are further split into
+        training and validation subsets using the configured validation split
+        and random seed.
 
         Returns:
-            A tuple containing the train, validation and test dataframes.
+            A tuple containing the training, validation, and test dataframes.
 
         Raises:
-            ValueError: If no rows in the CSV file matches the prefixes
-            "Train/" or "Test/".
+            ValueError: If the CSV file does not contain samples for both the
+                'Train/' and 'Test/' subsets.
         """
         df = pd.read_csv(
             self._cfg_dataset.metadata_csv,
@@ -101,32 +123,25 @@ class CSVDatasetLoader(BaseDatasetLoader):
             random_state=self._cfg_dataset.loader.params.seed,
         )
 
-        message = f"Found {len(df_train)+len(df_val)} files belonging to {self._num_classes} classes. \n Using {len(df_train)} files for training and {len(df_val)} files for validation ({self._cfg_dataset.loader.params.validation_split*100}% of Train dataset).\nFound {len(df_test)} files belonging to {self._num_classes} classes. \n Using {len(df_test)} files for test."
-        print(message)
         return df_train, df_val, df_test
 
     def _resolve_classes(self, df_train: pd.DataFrame) -> None:
-        """Resolve class names and indices for the configured task.
+        """Resolve class names and label encoding for the configured task.
 
         For classification, class names are inferred from the training targets
-        and a class-name-to-index lookup table is created. For segmentation,
-        class names are obtained from the configuration or generated from
-        'num_classes'.
+        and a class-name-to-index lookup table is created.
+        For segmentation, class names are obtained from the configuration or
+        generated from 'num_classes'.
 
         Args:
             df_train: DataFrame containing the training targets.
+
+        Raises:
+            ValueError: If segmentation is configured without class names.
         """
         if self._cfg_dataset.task == "classification":
-
-            df_train[self.COLUMN_NAMES[1]] = df_train[self.COLUMN_NAMES[1]].apply(
-                lambda target: (
-                    str(target)
-                    if self._cfg_dataset.loader.params.label_mode == "categorical"
-                    else int(target)
-                )
-            )
-
-            self._class_names = sorted(df_train[self.COLUMN_NAMES[1]].unique().tolist())
+            targets_as_str = df_train[self.COLUMN_NAMES[1]].astype(str)
+            self._class_names = sorted(targets_as_str.unique().tolist())
 
             self._label_table = tf.lookup.StaticHashTable(
                 tf.lookup.KeyValueTensorInitializer(
@@ -136,35 +151,26 @@ class CSVDatasetLoader(BaseDatasetLoader):
             )
 
         if self._cfg_dataset.task == "segmentation":
-            if self._cfg_dataset.class_names is None:
-                raise ValueError(
-                    "The class names must be specified as a dictionary under the 'dataset.class_names' key.\n"
-                    f"Currently the value of class_names is: {self._cfg_dataset.class_names}"
-                )
-
-            self._class_names = list(
-                OmegaConf.to_container(
-                    self._cfg_dataset.class_names, resolve=True
-                ).values()
-            )
-
+            self._class_names = list(self._cfg_dataset.class_names.values())
         self._num_classes = len(self._class_names)
 
     def _load_classification_label(self, target: tf.Tensor) -> tf.Tensor:
-        """Convert class labels to integer indices or one-hot encodings.
+        """Convert a class name into its encoded label representation.
 
-        The output representation is determined by 'label_mode':
-        'categorical' returns one-hot encoded labels, while other modes
-        return integer class indices.
+        Class names are mapped to integer indices using the lookup table created
+        during class resolution. If 'label_mode' is 'categorical', the
+        integer index is converted to a one-hot encoded tensor.
 
         Args:
-            target: Tensor containing class-name labels.
+            target: Tensor containing the class name.
 
         Returns:
-            A tensor containing either integer class indices or one-hot encoded
-            class labels.
+            A tensor containing either the integer class index or its one-hot
+            encoded representation.
         """
-        target = tf.cast(target, self._label_table.key_dtype)
+        if target.dtype != tf.string:
+            target = tf.strings.as_string(target)
+
         index = self._label_table.lookup(target)
 
         if self._cfg_dataset.loader.params.label_mode == "categorical":
@@ -172,14 +178,17 @@ class CSVDatasetLoader(BaseDatasetLoader):
         return index
 
     def _load_segmentation_mask(self, target: tf.Tensor) -> tf.Tensor:
-        """Loads a segmentation mask raster from the target path.
-        Each pixel stores an integer class index.
+        """Load a segmentation mask from the target path.
+
+        The target path is resolved relative to the configured dataset root
+        directory. The resulting mask is returned with shape (H, W, 1).
 
         Args:
-            target: Tensor containing the path to the mask image
+            target: Tensor containing the relative path to the segmentation mask.
 
         Returns:
-            A tensor containing the per-pixel class indices with shape (H, W, 1)
+            Tensor containing the per-pixel class indices with shape
+            (H, W, 1).
         """
         mask_full_path = tf.strings.join([self._cfg_dataset.root_dir, "/", target])
         mask = _tf_py_function(
@@ -193,12 +202,16 @@ class CSVDatasetLoader(BaseDatasetLoader):
     ) -> tuple[tf.Tensor, tf.Tensor]:
         """Load an image and its corresponding target.
 
+        The image path is resolved relative to the configured dataset root
+        directory. The target is loaded according to the configured task,
+        either as a classification label or a segmentation mask.
+
         Args:
-            image_path: Tensor containing the image path.
-            target: Tensor containing the target information.
+            image_path: Tensor containing the relative path to the image.
+            target: Tensor containing the corresponding class label or mask path.
 
         Returns:
-            A tuple of tensors containing the loaded image and its corresponding label.
+            A tuple containing the image tensor and its corresponding target.
         """
         image_full_path = tf.strings.join([self._cfg_dataset.root_dir, "/", image_path])
         image = _tf_py_function(
@@ -208,11 +221,20 @@ class CSVDatasetLoader(BaseDatasetLoader):
         label = self._label_loaders[self._cfg_dataset.task](target)
         return image, label
 
-    def _make_dataset(self, df: pd.DataFrame, training: bool = None) -> tf.data.Dataset:
-        """Create a TensorFlow dataset from the input samples.
+    def _make_dataset(
+        self, df: pd.DataFrame, training: bool = False
+    ) -> tf.data.Dataset:
+        """Create a batched TensorFlow dataset from a dataframe.
+
+        Samples are optionally shuffled when creating the training dataset,
+        according to the configured 'shuffle' parameter. Images and their
+        corresponding targets are then loaded in parallel and batched using the
+        configured batch size.
+
         Args:
             df: DataFrame containing image paths and target information.
-            training: in case the dataset is used for training and needs to be shuffled.
+            training: Whether the dataset is used for training and should be
+                eligible for shuffling.
 
         Returns:
             A batched TensorFlow dataset containing images and their targets.
@@ -229,13 +251,28 @@ class CSVDatasetLoader(BaseDatasetLoader):
         return dataset.batch(self._cfg_dataset.loader.params.batch_size)
 
     def load_data(self) -> tuple[tf.data.Dataset, tf.data.Dataset, tf.data.Dataset]:
-        """Load and prepare the train, validation, and test datasets from the CSV metadata file.
+        """Load and prepare the train, validation, and test datasets.
+
+        The metadata CSV is split into training, validation, and test samples.
+        Class information is resolved from the training data or configuration,
+        and each split is converted into a batched TensorFlow dataset.
 
         Returns:
-            A tuple containing the batched train, validation, and test datasets.
+            A tuple containing the batched training, validation, and test
+            datasets.
         """
         df_train, df_val, df_test = self._split_dataframe()
         self._resolve_classes(df_train)
+
+        #####CHANGE MESSAGE PRINT FOR LOGGING
+        message = (
+            f"Found {len(df_train) + len(df_val)} files belonging to {self._num_classes} classes.\n"
+            f" - Using {len(df_train)} files for training and {len(df_val)} files for validation "
+            f"({self._cfg_dataset.loader.params.validation_split * 100}% of Train dataset).\n\n"
+            f"Found {len(df_test)} files belonging to {self._num_classes} classes.\n"
+            f" - Using {len(df_test)} files for test."
+        )
+        print(message)
 
         train_ds = self._make_dataset(df_train, training=True)
         val_ds = self._make_dataset(df_val)
