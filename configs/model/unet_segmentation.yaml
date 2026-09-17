@@ -1,0 +1,129 @@
+model_name: "U-net from scratch"
+
+builder_name: "declarative_builder"
+blocks:  
+  #==============================================================ENCODER==============================================================  
+  #CONV1  
+  - name: conv1_1
+    type: conv2d
+    params: {filters: 16, kernel_size: [3,3], strides: [1,1], padding: same, activation: relu}
+
+  - name: conv1_2
+    type: conv2d
+    params: {filters: 16, kernel_size: [3,3], strides: [1,1], padding: same, activation: relu}
+  
+  - name: pool1
+    type: pooling2d
+    params: {method: max2d, pool_size: [2,2]}
+
+  #CONV2
+  - name: conv2_1
+    type: conv2d
+    params: {filters: 32, kernel_size: [3,3], strides: [1,1], padding: same, activation: relu}
+
+  - name: conv2_2
+    type: conv2d
+    params: {filters: 32, kernel_size: [3,3], strides: [1,1], padding: same, activation: relu}
+    
+  - name: pool2
+    type: pooling2d
+    params: {method: max2d, pool_size: [2,2]}
+
+  #CONV3
+  - name: conv3_1
+    type: conv2d
+    params: {filters: 64, kernel_size: [3,3], strides: [1,1], padding: same, activation: relu}
+
+  - name: conv3_2
+    type: conv2d
+    params: {filters: 64, kernel_size: [3,3], strides: [1,1], padding: same, activation: relu}
+
+  - name: pool3
+    type: pooling2d
+    params: {method: max2d, pool_size: [2,2]}
+
+  #CONV4
+  - name: conv4_1
+    type: conv2d
+    params: {filters: 128, kernel_size: [3,3], strides: [1,1], padding: same, activation: relu}
+
+  - name: conv4_2
+    type: conv2d
+    params: {filters: 128, kernel_size: [3,3], strides: [1,1], padding: same, activation: relu}
+    
+  - name: pool4
+    type: pooling2d
+    params: {method: max2d, pool_size: [2,2]}
+    
+  #CONV5 (bottleneck)
+  - name: conv5_1
+    type: conv2d
+    params: {filters: 256, kernel_size: [3,3], strides: [1,1], padding: same, activation: relu}
+
+  - name: conv5_2
+    type: conv2d
+    params: {filters: 256, kernel_size: [3,3], strides: [1,1], padding: same, activation: relu}
+
+  #==============================================================DECODER==============================================================
+
+  # UP1 (+ skip from conv4_2, pre-pooling)
+  - name: up1
+    type: upsample_concat_block
+    skip_connection_from: conv4_2
+    params: {filters: 128, kernel_size: [2,2], strides: [2,2], padding: same}
+
+  - name: dec1_1
+    type: conv2d
+    params: {filters: 128, kernel_size: [3,3], strides: [1,1], padding: same, activation: relu}
+
+  - name: dec1_2
+    type: conv2d
+    params: {filters: 128, kernel_size: [3,3], strides: [1,1], padding: same, activation: relu}
+
+  # UP2 (+ skip from conv3_2, pre-pooling)
+  - name: up2
+    type: upsample_concat_block
+    skip_connection_from: conv3_2
+    params: {filters: 64, kernel_size: [2,2], strides: [2,2], padding: same}
+
+  - name: dec2_1
+    type: conv2d
+    params: {filters: 64, kernel_size: [3,3], strides: [1,1], padding: same, activation: relu}
+
+  - name: dec2_2
+    type: conv2d
+    params: {filters: 64, kernel_size: [3,3], strides: [1,1], padding: same, activation: relu}
+
+  # UP3 (+ skip from conv2_2, pre-pooling)
+  - name: up3
+    type: upsample_concat_block
+    skip_connection_from: conv2_2
+    params: {filters: 32, kernel_size: [2,2], strides: [2,2], padding: same}
+
+  - name: dec3_1
+    type: conv2d
+    params: {filters: 32, kernel_size: [3,3], strides: [1,1], padding: same, activation: relu}
+
+  - name: dec3_2
+    type: conv2d
+    params: {filters: 32, kernel_size: [3,3], strides: [1,1], padding: same, activation: relu}
+
+  # UP4 (+ skip from conv1_2, pre-pooling)
+  - name: up4
+    type: upsample_concat_block
+    skip_connection_from: conv1_2
+    params: {filters: 16, kernel_size: [2,2], strides: [2,2], padding: same}
+
+  - name: dec4_1
+    type: conv2d
+    params: {filters: 16, kernel_size: [3,3], strides: [1,1], padding: same, activation: relu}
+
+  - name: dec4_2
+    type: conv2d
+    params: {filters: 16, kernel_size: [3,3], strides: [1,1], padding: same, activation: relu}
+
+  #==============================================================OUTPUT==============================================================
+  - name: output
+    type: conv2d
+    params: {kernel_size: [1,1], strides: [1,1], padding: same, activation: softmax}
+    inject_num_classes_as: filters

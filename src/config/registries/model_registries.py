@@ -13,19 +13,25 @@ from tensorflow.keras.models import Model
 
 from src.model.blocks import (
     conv2d,
+    pooling2d,
     dense_head,
     vgg16_backbone,
+    conv2d_transpose,
+    upsample_concat_block,
     MODEL_POOLING_LAYERS_REGISTRY,
 )
-from src.model.builders.declarative_models import declarative_classification_model
+from src.model.builders.declarative_builder import declarative_builder
 
 MODEL_BUILDERS_REGISTRY: dict[str, Callable[..., Model]] = {
-    "declarative_classification_model": declarative_classification_model,
+    "declarative_builder": declarative_builder,
 }
 
 
 MODEL_BLOCKS_REGISTRY: dict[str, Callable[..., tf.Tensor]] = {
     "conv2d": conv2d,
+    "pooling2d": pooling2d,
     "dense_head": dense_head,
     "vgg16_backbone": vgg16_backbone,
+    "conv2d_transpose": conv2d_transpose,
+    "upsample_concat_block": upsample_concat_block,
 }

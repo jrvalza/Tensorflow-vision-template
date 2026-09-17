@@ -1,10 +1,13 @@
 model_name: "CNN_with_VGG16_transfer_learning"
 
-builder_name: "declarative_classification_model"
+builder_name: "declarative_builder"
 blocks:
 
-  - type: vgg16_backbone
+  - name: backbone
+    type: vgg16_backbone
     params: {trainable_blocks: [block5], target_size: [224,224], weights: imagenet, include_top: false}
 
-  - type: dense_head
-    params: {units: [1000, 200], output_activation: softmax, batch_norm: false, dropout_rate: 0.3}
+  - name: head
+    type: dense_head
+    params: {units: [1000, 200], hidden_activation: relu, output_activation: softmax, batch_norm: false, dropout_rate: 0.3}
+    inject_num_classes_as: num_classes

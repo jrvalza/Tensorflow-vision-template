@@ -1,19 +1,25 @@
 model_name: "CNN_from_Scratch"
 
-builder_name: "declarative_classification_model"
+builder_name: "declarative_builder"
 blocks:
 
-  - type: conv2d
-    params: {filters: 32, activation: relu, batch_norm: true}
+  - name: conv1_1
+    type: conv2d
+    params: {filters: 32, kernel_size: [3,3], strides: [1,1], padding: same, activation: relu, batch_norm: true}
 
-  - type: conv2d
-    params: {filters: 32, activation: relu, batch_norm: true, pooling: max2d, dropout_rate: 0.25}
+  - name: conv1_2
+    type: conv2d
+    params: {filters: 32, kernel_size: [3,3], strides: [1,1], padding: same, activation: relu, batch_norm: true, pooling: max2d, pool_size: [2,2], dropout_rate: 0.25}
 
-  - type: conv2d
-    params: {filters: 64, activation: relu, batch_norm: true}
+  - name: conv2_1
+    type: conv2d
+    params: {filters: 64, kernel_size: [3,3], strides: [1,1], padding: same, activation: relu, batch_norm: true}
 
-  - type: conv2d
-    params: {filters: 64, activation: relu, batch_norm: true, pooling: max2d, dropout_rate: 0.25}
+  - name: conv2_2
+    type: conv2d
+    params: {filters: 64, kernel_size: [3,3], strides: [1,1], padding: same, activation: relu, batch_norm: true, pooling: max2d, pool_size: [2,2], dropout_rate: 0.25}
 
-  - type: dense_head
-    params: {units: [512], output_activation: softmax, batch_norm: true, dropout_rate: 0.5}
+  - name: head
+    type: dense_head
+    params: {units: [512], hidden_activation: relu, output_activation: softmax, batch_norm: true, dropout_rate: 0.5}
+    inject_num_classes_as: num_classes
